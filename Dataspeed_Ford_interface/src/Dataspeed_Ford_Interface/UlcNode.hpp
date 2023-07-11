@@ -33,15 +33,18 @@
  *********************************************************************/
 #pragma once
 
-#include <rclcpp/rclcpp.hpp>
-#include <tier4_api_utils/tier4_api_utils.hpp>
-#include <vehicle_info_util/vehicle_info_util.hpp>
-#include <std_msgs/msg/bool.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+//For dataspeed
 #include <can_msgs/msg/frame.hpp>
 #include <dataspeed_ulc_msgs/msg/ulc_cmd.hpp>
 #include <dataspeed_ulc_msgs/msg/ulc_report.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <dataspeed_dbw_common/PlatformMap.hpp>
+
+//For Autoware
+#include <tier4_api_utils/tier4_api_utils.hpp>
+#include <vehicle_info_util/vehicle_info_util.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <autoware_auto_vehicle_msgs/msg/control_mode_report.hpp>
 #include <autoware_auto_vehicle_msgs/msg/engage.hpp>
@@ -55,12 +58,21 @@
 #include <autoware_auto_vehicle_msgs/msg/velocity_report.hpp>
 #include <autoware_auto_vehicle_msgs/srv/control_mode_command.hpp>
 
-
+#include <tier4_api_msgs/msg/door_status.hpp>
+#include <tier4_external_api_msgs/srv/set_door.hpp>
+#include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
+#include <tier4_vehicle_msgs/msg/actuation_status_stamped.hpp>
+#include <tier4_vehicle_msgs/msg/steering_wheel_status_stamped.hpp>
+#include <tier4_vehicle_msgs/msg/vehicle_emergency_stamped.hpp>
 
 namespace dataspeed_ulc_can {
 
 class UlcNode : public rclcpp::Node {
 public:
+  using ActuationCommandStamped = tier4_vehicle_msgs::msg::ActuationCommandStamped;
+  using ActuationStatusStamped = tier4_vehicle_msgs::msg::ActuationStatusStamped;
+  using SteeringWheelStatusStamped = tier4_vehicle_msgs::msg::SteeringWheelStatusStamped;
+  using ControlModeCommand = autoware_auto_vehicle_msgs::srv::ControlModeCommand;
   UlcNode(const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 
 private:
@@ -70,10 +82,19 @@ private:
   void recvTwistCmd(const geometry_msgs::msg::Twist &msg);
   void recvTwist(const geometry_msgs::msg::Twist::ConstSharedPtr msg);
   void recvTwistStamped(const geometry_msgs::msg::TwistStamped::ConstSharedPtr msg);
-  void recvAutowareTwistStamped(const geometry_msgs::TwistStamped& msg);
-  void recvControlCmd(const autoware_auto_control_msgs::msg::AckermannControlCommand& msg);
-  void recvVehicleCmd();  //need to be revised
   void recvEnable(const std_msgs::msg::Bool::ConstSharedPtr msg);
+
+  //Callabcks for Autoware
+  void recvAutowareTwistStamped(const geometry_msgs::msg::TwistStamped::ConstSharedPtr msg);
+  void recvControlCmd(autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+  void recvGearCmd(const autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr msg);
+  void recvTurnIndicatorsCmd(
+    const autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand::ConstSharedPtr msg);
+  void recvHazardLightsCmd(
+    const autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr msg);
+  
+  void recvVehicleCmd();  //need to be revised
+
   void configTimerCb();
 
   // Transmit CAN messages
@@ -102,9 +123,9 @@ private:
     turn_indicators_cmd_sub_;
   rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::HazardLightsCommand>::SharedPtr
     hazard_lights_cmd_sub_;
-  rclcpp::Subscription<ActuationCommandStamped>::SharedPtr actuation_cmd_sub_;
   rclcpp::Subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>::SharedPtr emergency_sub_;
-  rclcpp::Subscription<autoware_msgs::VehicleCmd>::SharedPtr sub_vehicle_cmd;
+    //rclcpp::Subscription<ActuationCommandStamped>::SharedPtr actuation_cmd_sub_;
+  //rclcpp::Subscription<autoware_msgs::VehicleCmd>::SharedPtr sub_vehicle_cmd;
 
   // Publishers
   rclcpp::Publisher<dataspeed_ulc_msgs::msg::UlcReport>::SharedPtr pub_report_;
@@ -138,6 +159,13 @@ private:
   double current_speed_;
   bool enable_;
   bool active_;
+
+    /* input values */
+  ActuationCommandStamped::ConstSharedPtr actuation_cmd_ptr_;
+  autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr control_cmd_ptr_;
+  autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand::ConstSharedPtr turn_indicators_cmd_ptr_;
+  autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
+  autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
 };
 
 }  // namespace dataspeed_ulc_can
