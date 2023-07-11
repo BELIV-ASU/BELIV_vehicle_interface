@@ -1,28 +1,33 @@
 # Dataspeed_ULCnode
-# Project Title
 
-Simple overview of use/purpose.
+Vehicle Interface for Dataspeed FORD Mach_E
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
 
 ## Getting Started
 
+* Plase read through the Autoware documentation first before you do any modifcation to the folder. [Click here](https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/overview/#3-create-a-vehicle_interface-package)
+
+* If you know git version control works, please feel free to working on in right away, if you are not familiar with the version control,Plase watch this video and pratice few before you upload your file to this Repo [Click here](https://www.youtube.com/watch?v=USjZcfj8yxE)
+
+
+
 ### Dependencies
 
-* Describe any prerequisites, libraries, OS version, etc., needed before installing program.
-* ex. Windows 10
+* git version 2.34.1
+* Autoware.Universe
+* Ubuntu 22.04
+* Ros Humble
+* Dataspeed NavRoute Path Follwoing Sofeware 1.1.1
+* ULC TBD
 
-### Installing
-
-* How/where to download your program
-* Any modifications needed to be made to files/folders
 
 ### Executing program
 
-* How to run the program
-* Step-by-step bullets
+* Download this folder into your local computer and you can adding or eddting this folder
+* Add the file you created or modifed to the local folder
+* Plase pay attention to the version of the modifed file
+* Update the folder using git version control
+* Well Done
 ```
 code blocks for commands
 ```
@@ -36,10 +41,7 @@ command to run if program contains helper info
 
 ## Authors
 
-Contributors names and contact info
-
-ex. Dominique Pizzie  
-ex. [@DomPizzie](https://twitter.com/dompizzie)
+ASU Believ Lab
 
 ## Version History
 
@@ -51,13 +53,4 @@ ex. [@DomPizzie](https://twitter.com/dompizzie)
 
 ## License
 
-This project is licensed under the [NAME HERE] License - see the LICENSE.md file for details
-
-## Acknowledgments
-
-Inspiration, code snippets, etc.
-* [awesome-readme](https://github.com/matiassingers/awesome-readme)
-* [PurpleBooth](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
-* [dbader](https://github.com/dbader/readme-template)
-* [zenorocha](https://gist.github.com/zenorocha/4526327)
-* [fvcproductions](https://gist.github.com/fvcproductions/1bfc2d4aecb01a834b46)
+This project is licensed under the [ASU Beliv Lab] License - see the LICENSE.md file for details
