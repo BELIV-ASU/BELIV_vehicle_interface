@@ -11,7 +11,8 @@ Vehicle Interface for Dataspeed FORD Mach_E
 * If you know git version control works, please feel free to working on in right away, if you are not familiar with the version control,Plase watch this video and pratice few before you upload your file to this Repo [Click here](https://www.youtube.com/watch?v=USjZcfj8yxE)
 
 ### Overall Structure
-![image](https://github.com/BELIV-ASU/Dataspeed_ULCnode/assets/123104450/eba925ab-4138-4242-874f-f6fd11f15fae)
+![image](https://github.com/BELIV-ASU/Dataspeed_ULCnode/assets/123104450/73878cb2-976a-4372-9162-225c3325fa80)
+
 
 
 ### Dependencies
