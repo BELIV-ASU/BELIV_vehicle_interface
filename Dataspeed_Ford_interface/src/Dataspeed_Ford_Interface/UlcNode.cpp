@@ -72,7 +72,17 @@ PlatformMap OLD_ULC_FIRMWARE({
   {PlatformVersion(P_POLARIS_RZR, M_STEER, ModuleVersion(0,3,1))},
 });
 
-UlcNode::UlcNode(const rclcpp::NodeOptions &options) : rclcpp::Node("ulc_node", options), enable_(false) {
+UlcNode::UlcNode(const rclcpp::NodeOptions &options) : rclcpp::Node("ulc_node", options), enable_(false) 
+{
+    /* setup parameters */
+  base_frame_id_ = declare_parameter("base_frame_id", "base_link");
+  command_timeout_ms_ = declare_parameter("command_timeout_ms", 1000);
+  loop_rate_ = declare_parameter("loop_rate", 30.0);
+
+  /* parameters for vehicle specifications */
+  tire_radius_ = vehicle_info_.wheel_radius_m;
+  wheel_base_ = vehicle_info_.wheel_base_m;
+  
   // Setup publishers
   pub_report_ = create_publisher<dataspeed_ulc_msgs::msg::UlcReport>("ulc_report", 2);
   pub_can_ = create_publisher<can_msgs::msg::Frame>("can_tx", 100);
@@ -226,11 +236,11 @@ void UlcNode::recvControlCmd(
   float COUNTS_PER_REV=125.5;
   
   // Populate command fields
-  ulc_cmd_.linear_velocity = msg.longitudinal.speed;
+  ulc_cmd_.linear_velocity = msg->longitudinal.speed;
   ulc_cmd_.accel_cmd = 0.0; // Not used when pedals_mode is SPEED_MODE
   ulc_cmd_.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
   ulc_cmd_.coast_decel = false;
-  ulc_cmd_.yaw_command = msg.lateral.steering_tire_angle* COUNTS_PER_REV;
+  ulc_cmd_.yaw_command = msg->lateral.steering_tire_angle* COUNTS_PER_REV;
   ulc_cmd_.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
 
 
@@ -269,7 +279,7 @@ void UlcNode::recvHazardLightsCmd(
   hazard_lights_cmd_ptr_ = msg;
 }
 
-void UlcNode::recvVehicleCmd(const autoware_msgs::VehicleCmdConstPtr& msg)
+void UlcNode::recvVehicleCmd(const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
 {
   //recvControlCmd(msg->ctrl_cmd);lateral
   recvAutowareTwistStamped(msg->twist_cmd);
@@ -324,18 +334,123 @@ void UlcNode::recvCan(const can_msgs::msg::Frame::ConstSharedPtr msg) {
   }
 }
 
+void UlcNode::onControlModeRequest(
+  const ControlModeCommand::Request::SharedPtr request,
+  const ControlModeCommand::Response::SharedPtr response)
+{
+  if (request->mode == ControlModeCommand::Request::AUTONOMOUS) {
+    engage_cmd_ = true;
+    is_clear_override_needed_ = true;
+    response->success = true;
+    return;
+  }
+
+  if (request->mode == ControlModeCommand::Request::MANUAL) {
+    engage_cmd_ = false;
+    is_clear_override_needed_ = true;
+    response->success = true;
+    return;
+  }
+
+  RCLCPP_ERROR(get_logger(), "unsupported control_mode!!");
+  response->success = false;
+  return;
+}
+
+// rear door status in UlcNode
+// void UlcNode::callbackRearDoor(
+//   const pacmod3_msgs::msg::SystemRptInt::ConstSharedPtr rear_door_rpt)
+// {
+//   /* publish current door status */
+//   door_status_pub_->publish(toAutowareDoorStatusMsg(*rear_door_rpt));
+// }
+
 // pass Ulc report to Autoware
-void UlcNode::callbackUlcRpt(dataspeed_ulc_msgs::msg::UlcReport report)
+void UlcNode::callbackUlcRpt(dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr report)
 {
   std_msgs::msg::Header header;
   header.frame_id = base_frame_id_;
   header.stamp = get_clock()->now();
 
+  //steer_wheel_rpt_ptr_ = steer_wheel_rpt;
+  //wheel_speed_rpt_ptr_ = wheel_speed_rpt;
+  // accel_rpt_ptr_ = accel_rpt;
+  // brake_rpt_ptr_ = brake_rpt;
+  // gear_cmd_rpt_ptr_ = shift_rpt;
+  // global_rpt_ptr_ = global_rpt;
+  // turn_rpt_ptr_ = turn_rpt;
+
+
+  /*
+  const double current_velocity = calculateVehicleVelocity(
+    *wheel_speed_rpt_ptr_, *gear_cmd_rpt_ptr_);  // current vehicle speed > 0 [m/s]
+  */
+  const double current_velocity = report-> speed_meas;
+  //const double current_steer_wheel =
+  //  steer_wheel_rpt_ptr_->output;  // current vehicle steering wheel angle [rad]
+  const double adaptive_gear_ratio =
+    calculateVariableGearRatio(current_velocity, current_steer_wheel);
+  const double current_steer = current_steer_wheel / adaptive_gear_ratio + steering_offset_;
+
+
+  /* publish steering wheel status */
+  // {
+  //   if (report->)
+  //   SteeringWheelStatusStamped steering_wheel_status_msg;
+  //   steering_wheel_status_msg.stamp = header.stamp;
+  //   steering_wheel_status_msg.data = current_steer_wheel;
+  //   steering_wheel_status_pub_->publish(steering_wheel_status_msg);
+  // }
+
+
+  /* publish vehicle status control_mode */
+  {
+    autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
+    control_mode_msg.stamp = header.stamp;
+
+    if (report->pedals_enabled && report->steering_enabled && !report->override_latched) {
+      control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+    } else {
+      control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
+    }
+
+    control_mode_pub_->publish(control_mode_msg);
+  }
+
+  /* publish vehicle status twist */
+  {
+    autoware_auto_vehicle_msgs::msg::VelocityReport twist;
+    twist.header = header;
+    twist.longitudinal_velocity = current_velocity;                                 // [m/s]
+    twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
+    vehicle_twist_pub_->publish(twist);
+  }
+
+  /* publish current shift */
+  {
+    autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
+    gear_report_msg.stamp = header.stamp;
+    const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
+    if (opt_gear_report) {
+      gear_report_msg.report = *opt_gear_report;
+      gear_status_pub_->publish(gear_report_msg);
+    }
+  }
+
+  /* publish current status */
+  {
+    autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
+    steer_msg.stamp = header.stamp;
+    steer_msg.steering_tire_angle = current_steer;
+    steering_status_pub_->publish(steer_msg);
+  }
+
+
   /*publish control mode*/
   {
     autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
     control_mode_msg.stamp = header.stamp;
-    if (report.override_latched == 0){
+    if (report->override_latched == 0){
 
     }
     control_mode_pub_->publish(control_mode_msg);
@@ -361,26 +476,26 @@ void UlcNode::callbackUlcRpt(dataspeed_ulc_msgs::msg::UlcReport report)
     }
   }
 
-  /*publish TurnIndicatorsReport*/
-  {
-    autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
-    turn_msg.stamp = header.stamp;
-    turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
-    turn_indicators_status_pub_->publish(turn_msg);
+  // /*publish TurnIndicatorsReport*/
+  // {
+  //   autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
+  //   turn_msg.stamp = header.stamp;
+  //   turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
+  //   turn_indicators_status_pub_->publish(turn_msg);
 
-    autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
-    hazard_msg.stamp = header.stamp;
-    hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
-    hazard_lights_status_pub_->publish(hazard_msg);
-  }
+  //   autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
+  //   hazard_msg.stamp = header.stamp;
+  //   hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
+  //   hazard_lights_status_pub_->publish(hazard_msg);
+  // }
 
-  /*publish HazardLightsReport*/
-  {
-    autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
-    hazard_msg.stamp = header.stamp;
-    hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
-    hazard_lights_status_pub_->publish(hazard_msg);
-  }
+  // /*publish HazardLightsReport*/
+  // {
+  //   autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
+  //   hazard_msg.stamp = header.stamp;
+  //   hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
+  //   hazard_lights_status_pub_->publish(hazard_msg);
+  // }
 
   /*publish ActuationStatusStamped*/
   {
@@ -392,13 +507,13 @@ void UlcNode::callbackUlcRpt(dataspeed_ulc_msgs::msg::UlcReport report)
     actuation_status_pub_->publish(actuation_status);  
   }
 
-  /*publish SteeringWheelStatusStamped*/
-  {
-    SteeringWheelStatusStamped steering_wheel_status_msg;
-    steering_wheel_status_msg.stamp = header.stamp;
-    steering_wheel_status_msg.data = current_steer_wheel;
-    steering_wheel_status_pub_->publish(steering_wheel_status_msg);
-  }
+  // /*publish SteeringWheelStatusStamped*/
+  // {
+  //   SteeringWheelStatusStamped steering_wheel_status_msg;
+  //   steering_wheel_status_msg.stamp = header.stamp;
+  //   steering_wheel_status_msg.data = current_steer_wheel;
+  //   steering_wheel_status_pub_->publish(steering_wheel_status_msg);
+  // }
 
 }
 

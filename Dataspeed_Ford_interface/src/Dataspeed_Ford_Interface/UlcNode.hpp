@@ -93,8 +93,10 @@ private:
   void recvHazardLightsCmd(
     const autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr msg);
   
-  void recvVehicleCmd();  //need to be revised
-
+  void recvVehicleCmd(const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr);  //need to be revised
+  void onControlModeRequest(const ControlModeCommand::Request::SharedPtr request,
+    const ControlModeCommand::Response::SharedPtr response);
+  void callbackUlcRpt(dataspeed_ulc_msgs::msg::UlcReport report);
   void configTimerCb();
 
   // Transmit CAN messages
@@ -159,6 +161,42 @@ private:
   double current_speed_;
   bool enable_;
   bool active_;
+
+    /* ros param */
+  std::string base_frame_id_;
+  int command_timeout_ms_;  // vehicle_cmd timeout [ms]
+  bool is_pacmod_rpt_received_ = false;
+  bool is_pacmod_enabled_ = false;
+  bool is_clear_override_needed_ = false;
+  bool prev_override_ = false;
+  double loop_rate_;           // [Hz]
+  double tire_radius_;         // [m]
+  double wheel_base_;          // [m]
+  double steering_offset_;     // [rad] def: measured = truth + offset
+  double vgr_coef_a_;          // variable gear ratio coeffs
+  double vgr_coef_b_;          // variable gear ratio coeffs
+  double vgr_coef_c_;          // variable gear ratio coeffs
+  double accel_pedal_offset_;  // offset of accel pedal value
+  double brake_pedal_offset_;  // offset of brake pedal value
+
+  double emergency_brake_;              // brake command when emergency [m/s^2]
+  double max_throttle_;                 // max throttle [0~1]
+  double max_brake_;                    // max throttle [0~1]
+  double max_steering_wheel_;           // max steering wheel angle [rad]
+  double max_steering_wheel_rate_;      // [rad/s]
+  double min_steering_wheel_rate_;      // [rad/s]
+  double steering_wheel_rate_low_vel_;  // [rad/s]
+  double steering_wheel_rate_stopped_;  // [rad/s]
+  double low_vel_thresh_;               // [m/s]
+
+  bool enable_steering_rate_control_;   // use steering angle speed for command [rad/s]
+  bool need_separate_engage_sequence_;  // when you use a newer version of firmware than 3.3, it
+                                        // must be true
+
+  double hazard_thresh_time_;
+  int hazard_recover_count_ = 0;
+  const int hazard_recover_cmd_num_ = 5;
+  vehicle_info_util::VehicleInfo vehicle_info_;
 
     /* input values */
   ActuationCommandStamped::ConstSharedPtr actuation_cmd_ptr_;
