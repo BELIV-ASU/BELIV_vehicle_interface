@@ -1624,3 +1624,206 @@ void DbwNode::publishJointStates(const rclcpp::Time &stamp, const dbw_ford_msgs:
 
 #include "rclcpp_components/register_node_macro.hpp"
 RCLCPP_COMPONENTS_REGISTER_NODE(dbw_ford_can::DbwNode)
+
+// pass Dbw report to Autoware
+void DbwNode::callbackUlcRpt(
+  const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt;
+  const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt;
+  const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt;
+  const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt;
+  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt;
+  )
+{
+  std_msgs::msg::Header header;
+  header.frame_id = base_frame_id_;
+  header.stamp = get_clock()->now();
+
+  gear_rpt_ptr_ = steer_wheel_rpt;
+  steering_rpt_ptr = steering_rpt;
+  throttle_rpt_ptr = throttle_rpt;
+  brake_rpt_ptr_ = brake_rpt;
+  misc1_rpt_ptr_ = global_rpt;
+
+  const double current_velocity = steering_rpt.speed;
+  const double current_steer_wheel =
+    steering_rpt.steering_wheel_angle;  // current vehicle steering wheel angle [rad]
+  const double adaptive_gear_ratio =
+    calculateVariableGearRatio(current_velocity, current_steer_wheel);
+  const double current_steer = current_steer_wheel / adaptive_gear_ratio + steering_offset_;
+
+
+  /* publish steering wheel status */
+  {
+    SteeringWheelStatusStamped steering_wheel_status_msg;
+    steering_wheel_status_msg.stamp = header.stamp;
+    steering_wheel_status_msg.data = current_steer_wheel;
+    steering_wheel_status_pub_->publish(steering_wheel_status_msg);
+  }
+
+
+  /* publish vehicle status control_mode */
+  {
+    autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
+    control_mode_msg.stamp = header.stamp;
+
+    if (report->pedals_enabled && report->steering_enabled && !report->override_latched) {
+      control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
+    } else {
+      control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
+    }
+
+    control_mode_pub_->publish(control_mode_msg);
+  }
+
+  /* publish vehicle status twist */
+  {
+    autoware_auto_vehicle_msgs::msg::VelocityReport twist;
+    twist.header = header;
+    twist.longitudinal_velocity = current_velocity;                                 // [m/s]
+    twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
+    vehicle_twist_pub_->publish(twist);
+  }
+
+  /* publish current shift */
+  {
+    autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
+    gear_report_msg.stamp = header.stamp;
+    const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
+    if (opt_gear_report) {
+      gear_report_msg.report = *opt_gear_report;
+      gear_status_pub_->publish(gear_report_msg);
+    }
+  }
+
+  /* publish current status */
+  {
+    autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
+    steer_msg.stamp = header.stamp;
+    steer_msg.steering_tire_angle = current_steer;
+    steering_status_pub_->publish(steer_msg);
+  }
+
+
+  /*publish control mode*/
+  {
+    autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
+    control_mode_msg.stamp = header.stamp;
+    if (report->override_latched == 0){
+
+    }
+    control_mode_pub_->publish(control_mode_msg);
+  }
+
+  /*publish Velocity Report*/
+  {
+    autoware_auto_vehicle_msgs::msg::VelocityReport twist;
+    twist.header = header;
+    twist.longitudinal_velocity = current_velocity;                                 // [m/s]
+    twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
+    vehicle_twist_pub_->publish(twist);
+  }
+
+  /*publish Gear Report*/
+  {
+    autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
+    gear_report_msg.stamp = header.stamp;
+    const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
+    if (opt_gear_report) {
+      gear_report_msg.report = *opt_gear_report;
+      gear_status_pub_->publish(gear_report_msg);
+    }
+  }
+
+  /*publish TurnIndicatorsReport*/
+  {
+    autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
+    turn_msg.stamp = header.stamp;
+    turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
+    turn_indicators_status_pub_->publish(turn_msg);
+
+    autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
+    hazard_msg.stamp = header.stamp;
+    hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
+    hazard_lights_status_pub_->publish(hazard_msg);
+  }
+
+  /*publish ActuationStatusStamped*/
+  {
+    ActuationStatusStamped actuation_status;
+    actuation_status.header = header;
+    actuation_status.status.accel_status = accel_rpt_ptr_->output;
+    actuation_status.status.brake_status = brake_rpt_ptr_->output;
+    actuation_status.status.steer_status = current_steer;
+    actuation_status_pub_->publish(actuation_status);  
+  }
+
+  /*publish SteeringWheelStatusStamped*/
+  {
+    SteeringWheelStatusStamped steering_wheel_status_msg;
+    steering_wheel_status_msg.stamp = header.stamp;
+    steering_wheel_status_msg.data = current_steer_wheel;
+    steering_wheel_status_pub_->publish(steering_wheel_status_msg);
+  }
+
+}
+
+double DbwNode::calculateVariableGearRatio(const double vel, const double steer_wheel)
+{
+  return std::max(
+    1e-5, vgr_coef_a_ + vgr_coef_b_ * vel * vel - vgr_coef_c_ * std::fabs(steer_wheel));
+}
+
+std::optional<int32_t> DbwNode::toAutowareShiftReport(
+  const dbw_ford_msgs::msg::GearReport &gear_rpt)
+{
+  using autoware_auto_vehicle_msgs::msg::GearReport;
+  using dbw_ford_msgs::msg::GearReport;
+
+  if (gear_rpt.gear == GearReport::PARK) {
+    return GearReport::PARK;
+  }
+  if (gear_rpt.gear == GearReport::REVERSE) {
+    return GearReport::REVERSE;
+  }
+  if (gear_rpt.gear == GearReport::NEUTRAL) {
+    return GearReport::NEUTRAL;
+  }
+  if (gear_rpt.gear == GearReport::DRIVE) {
+    return GearReport::DRIVE;
+  }
+  if (gear_rpt.gear == GearReport::LOW) {
+    return GearReport::LOW;
+  }
+  return {};
+}
+
+int32_t DbwNode::toAutowareTurnIndicatorsReport(
+  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
+{
+  using autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport;
+  using dbw_ford_msgs::msg::Misc1Report;
+  using dbw_ford_msgs::msg::TurnSinal;
+
+  if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::RIGHT){
+    return TurnIndicatorsReport::ENABLE_RIGHT;
+  } else if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::LEFT){
+        return TurnIndicatorsReport::ENABLE_LEFT;
+  } else if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::NONE){
+    return TurnIndicatorsReport::DISABLE;
+  }
+  return TurnIndicatorsReport::DISABLE;
+}
+
+int32_t DbwNode::toAutowareHazardLightsReport(
+  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
+{
+  using autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport;
+  using dbw_ford_msgs::msg::Misc1Report;
+  using dbw_ford_msgs::msg::TurnSinal;
+
+  if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::HAZARD) {
+    return HazardLightsReport::ENABLE;
+  }
+
+  return HazardLightsReport::DISABLE;
+}
