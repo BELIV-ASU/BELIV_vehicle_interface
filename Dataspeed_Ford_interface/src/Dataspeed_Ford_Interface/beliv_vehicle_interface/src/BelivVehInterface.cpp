@@ -34,7 +34,7 @@
 
 #include "BelivVehInterface.hpp"
 
-namesoace dbw_ford_can{
+namespace dbw_ford_can{
 
 BelivVehInterface::BelivVehInterface()
         :rclcpp::Node("dbw_interface")
@@ -48,8 +48,16 @@ BelivVehInterface::BelivVehInterface()
     sub_brake_ = create_subscription<dbw_ford_msgs::msg::BrakeReport>("brake_report", 2);
     sub_throttle_ = create_subscription<dbw_ford_msgs::msg::ThrottleReport>("throttle_report", 2);
     sub_steering_ = create_subscription<dbw_ford_msgs::msg::SteeringReport>("steering_report", 2);
-    sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2);
-    sub_misc_1_ = create_subscription<dbw_ford_msgs::msg::Misc1Report>("misc_1_report", 2);
+    {
+        auto bind = std::bind(&BelivVehInterface::callbackGear);
+        sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2, bind);
+    }
+    // sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2);
+    {
+        auto bind = std::bind(&BelivVehInterface::callbackMisc1);
+        sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2, bind);
+    }
+    // sub_misc_1_ = create_subscription<dbw_ford_msgs::msg::Misc1Report>("misc_1_report", 2);
     sub_wheel_speeds_ = create_subscription<dbw_ford_msgs::msg::WheelSpeedReport>("wheel_speed_report", 2);
     sub_wheel_positions_ = create_subscription<dbw_ford_msgs::msg::WheelPositionReport>("wheel_position_report", 2);
     sub_tire_pressure_ = create_subscription<dbw_ford_msgs::msg::TirePressureReport>("tire_pressure_report", 2);
@@ -65,7 +73,29 @@ BelivVehInterface::BelivVehInterface()
     sub_gps_time_ = create_subscription<sensor_msgs::msg::TimeReference>("gps/time", 10);
     sub_twist_ = create_subscription<geometry_msgs::msg::TwistStamped>("twist", 10);    
 
+    //from Autoware
+    {
+        auto bind = std::bind(&BelivVehInterface::callbackControlCmd);
+        sub_control_cmd_ = create_subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>("control_cmd", 2, bind);
+    }
+
+    //from UlcNode
+    {
+        auto bind =std::bind(&BeliveVehInterface::ControlModeReport)
+        sub_ulc_rpt_ = create_subscription<dataspeed_ulc_msgs::UlcReport>("ulc_report", 2, bind);
+    }
+    
+/*  
+    // other cmds
+    sub_gear_cmd_ = create_subscription<GearCommand>("input/gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_gear_cmd_ = *msg; });
+    sub_manual_gear_cmd_ = create_subscription<GearCommand>("input/manual_gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_manual_gear_cmd_ = *msg; });
+    sub_turn_indicators_cmd_ = create_subscription<TurnIndicatorsCommand>("input/turn_indicators_command", QoS{1},std::bind(&SimplePlanningSimulator::on_turn_indicators_cmd, this, _1));
+    sub_hazard_lights_cmd_ = create_subscription<HazardLightsCommand>("input/hazard_lights_command", QoS{1},std::bind(&SimplePlanningSimulator::on_hazard_lights_cmd, this, _1));
+ */
     /* publisher */
+    //to UlcNode
+    pub_ulc_cmd_=create_publisher<dataspeed_ulc_msgs::msg::UlcCmd>("ulc_cmd", 2);
+
     //to Autoware
     pub_control_mode_ = create_publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>(
         "/vehicle/status/control_mode", rclcpp::QoS{1});
@@ -86,10 +116,9 @@ BelivVehInterface::BelivVehInterface()
         create_publisher<SteeringWheelStatusStamped>("/vehicle/status/steering_wheel_status", 1);
     pub_door_status_ =
         create_publisher<tier4_api_msgs::msg::DoorStatus>("/vehicle/status/door_status", 1);
-
 }
 
-void BelivVehInterface::recvDbwRpt(
+void BelivVehInterface::callbackRpt(
     const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
     const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
     const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt,
@@ -101,7 +130,7 @@ void BelivVehInterface::recvDbwRpt(
     header.stamp = get_clock()->now();
 
     gear_rpt_ptr_ = steer_wheel_rpt;
-    steering_rpt_ptr = steering_rpt;
+   
     throttle_rpt_ptr = throttle_rpt;
     brake_rpt_ptr_ = brake_rpt;
     misc1_rpt_ptr_ = global_rpt;
@@ -114,16 +143,39 @@ void BelivVehInterface::recvDbwRpt(
     const double current_steer = current_steer_wheel / adaptive_gear_ratio + steering_offset_;
 
 
+    
+void BelivVehInterface::callbackSteeringRpt(const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt)
+{
+    double wheelbase = 2.98;
+    const double current_velocity = steering_rpt.speed;
+    const double current_steer_wheel = steering_rpt.steering_wheel_angle;  // current vehicle steering wheel angle [rad]
+    const double adaptive_gear_ratio = calculateVariableGearRatio(current_velocity, current_steer_wheel);
+    const double current_steer = current_steer_wheel / adaptive_gear_ratio + steering_offset_;
+        
     /* publish steering wheel status */
-    {
-        SteeringWheelStatusStamped steering_wheel_status_msg;
-        steering_wheel_status_msg.stamp = header.stamp;
-        steering_wheel_status_msg.data = current_steer_wheel;
-        pub_steering_wheel_status_->publish(steering_wheel_status_msg);
-    }
+    steering_rpt_ptr = steering_rpt;
+    SteeringWheelStatusStamped steering_wheel_status_msg;
+    steering_wheel_status_msg.stamp = header.stamp;
+    steering_wheel_status_msg.data = current_steer_wheel;
+    pub_steering_wheel_status_->publish(steering_wheel_status_msg);
+
+    /* publish current steering status */
+    autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
+    steer_msg.stamp = header.stamp;
+    steer_msg.steering_tire_angle = current_steer;
+    pub_steering_status_->publish(steer_msg);
+
+    /*publish Velocity Report*/
+    autoware_auto_vehicle_msgs::msg::VelocityReport twist;
+    twist.header = header;
+    twist.longitudinal_velocity = current_velocity;                                 // [m/s]
+    twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
+    pub_vehicle_twist_->publish(twist);
+}
 
 
-  /* publish vehicle status control_mode */
+/* publish vehicle status control_mode */
+void BelivVehInterface::callbackControlModeReport(const dataspeed_ulc_msgs::UlcReport report)
     {
         autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
         control_mode_msg.stamp = header.stamp;
@@ -137,69 +189,25 @@ void BelivVehInterface::recvDbwRpt(
         pub_pub_control_mode_->publish(control_mode_msg);
     }
 
-    /* publish vehicle status twist */
-    {
-        autoware_auto_vehicle_msgs::msg::VelocityReport twist;
-        twist.header = header;
-        twist.longitudinal_velocity = current_velocity;                                 // [m/s]
-        twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
-        pub_vehicle_twist_->publish(twist);
+
+/* publish current shift */
+void BelivVehInterface::callbackGearReport()
+{
+    autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
+    gear_report_msg.stamp = header.stamp;
+    const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
+    if (opt_gear_report) {
+        gear_report_msg.report = *opt_gear_report;
+        pub_gear_status_->publish(gear_report_msg);
     }
-
-    /* publish current shift */
-    {
-        autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
-        gear_report_msg.stamp = header.stamp;
-        const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
-        if (opt_gear_report) {
-            gear_report_msg.report = *opt_gear_report;
-            pub_gear_status_->publish(gear_report_msg);
-        }
-    }
-
-    /* publish current status */
-    {
-        autoware_auto_vehicle_msgs::msg::SteeringReport steer_msg;
-        steer_msg.stamp = header.stamp;
-        steer_msg.steering_tire_angle = current_steer;
-        pub_steering_status_->publish(steer_msg);
-    }
+}
 
 
-    /*publish control mode*/
-    {
-        autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
-        control_mode_msg.stamp = header.stamp;
-        if (report->override_latched == 0){
-
-        }
-        pub_control_mode_->publish(control_mode_msg);
-    }
-
-    /*publish Velocity Report*/
-    {
-        autoware_auto_vehicle_msgs::msg::VelocityReport twist;
-        twist.header = header;
-        twist.longitudinal_velocity = current_velocity;                                 // [m/s]
-        twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
-        pub_vehicle_twist_->publish(twist);
-    }
-
-    /*publish Gear Report*/
-    {
-        autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
-        gear_report_msg.stamp = header.stamp;
-        const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
-        if (opt_gear_report) {
-          gear_report_msg.report = *opt_gear_report;
-          pub_gear_status_->publish(gear_report_msg);
-        }
-    }
-
-    /*publish TurnIndicatorsReport*/
-    {
-        autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
-        turn_msg.stamp = header.stamp;
+/*publish TurnIndicatorsReport*/
+void belivVehInterface::callbackTurnIndictorsReport
+{
+    autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
+    turn_msg.stamp = header.stamp;
     turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
     pub_turn_indicators_status_->publish(turn_msg);
 
@@ -207,7 +215,7 @@ void BelivVehInterface::recvDbwRpt(
     hazard_msg.stamp = header.stamp;
     hazard_msg.report = toAutowareHazardLightsReport(*turn_rpt);
     pub_hazard_lights_status_->publish(hazard_msg);
-    }
+}
 
     /*publish ActuationStatusStamped*/
     {
@@ -228,5 +236,43 @@ void BelivVehInterface::recvDbwRpt(
     }
 
 }
+
+void BelivVehInterface::callbackControlCmd(
+  autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
+{
+  double acker_wheelbase_ = 2.98; // 112.2 inches
+  double steering_ratio_ = 14.6;
+  double wheelbase = 2.98;
+  double track_width = 1.61;
+  double steering_angle = atan(wheelbase * tan(steering_tire_angle) / track_width);
+
+  dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd;
+
+  // Populate command fields
+  ulc_cmd.linear_velocity = msg->longitudinal.speed;
+  ulc_cmd.accel_cmd = 0.0; // Not used when pedals_mode is SPEED_MODE
+  ulc_cmd.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
+  ulc_cmd.coast_decel = false;
+  ulc_cmd.yaw_command = msg->longitudinal.speed * tan(steering_angle / steering_ratio_) / acker_wheelbase_;
+  ulc_cmd.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
+
+
+  // Set other fields to default values
+  ulc_cmd.clear = false;
+  ulc_cmd.enable_pedals = true;
+  ulc_cmd.enable_shifting = true;
+  ulc_cmd.enable_steering = true;
+  ulc_cmd.shift_from_park = false;
+  ulc_cmd.linear_accel = 0;
+  ulc_cmd.linear_decel = 0;
+  ulc_cmd.angular_accel = 0;
+  ulc_cmd.lateral_accel = 0;
+  ulc_cmd.jerk_limit_throttle = 0;
+  ulc_cmd.jerk_limit_brake = 0;
+
+  // Publish command message
+  pub_ulc_cmd_->publish(ucl_cmd);
+}
+
 
 }

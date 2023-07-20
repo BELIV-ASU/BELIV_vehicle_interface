@@ -34,6 +34,8 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <tier4_api_utils/tier4_api_utils.hpp>
+#include <vehicle_info_util/vehicle_info_util.hpp>
 
 // Messages
 #include <can_msgs/msg/frame.hpp>
@@ -63,6 +65,8 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/time_reference.hpp>
 #include <std_msgs/msg/empty.hpp>
+#include <dataspeed_ulc_msgs/UlcReport.h>
+
 
 // The following messages are deprecated
 #include <std_msgs/msg/bool.hpp>
@@ -72,6 +76,8 @@
 #include <dataspeed_dbw_common/PlatformMap.hpp>
 
 //For Autoware
+
+#include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
 #include <tier4_api_utils/tier4_api_utils.hpp>
 #include <vehicle_info_util/vehicle_info_util.hpp>
 #include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
@@ -94,26 +100,54 @@
 #include <tier4_vehicle_msgs/msg/steering_wheel_status_stamped.hpp>
 #include <tier4_vehicle_msgs/msg/vehicle_emergency_stamped.hpp>
 
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/synchronizer.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <memory>
+#include <optional>
+#include <string>
+
 namespace dbw_ford_can {
     
 class BelivVehInterface : public rclcpp::Node
 {
 public:
+    using ActuationCommandStamped = tier4_vehicle_msgs::msg::ActuationCommandStamped;
+    using ActuationStatusStamped = tier4_vehicle_msgs::msg::ActuationStatusStamped;
+    using SteeringWheelStatusStamped = tier4_vehicle_msgs::msg::SteeringWheelStatusStamped;
+    using ControlModeCommand = autoware_auto_vehicle_msgs::srv::ControlModeCommand;
     BelivVehInterface();
 
 private:
-    void recvDbwRpt(
+    void callcackControlCmd(
+        autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+    void callbackRpt(
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
         const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt,
         const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt);
-        
+
     /* Set up parameters */
     std::string base_frame_id_;
 
     /* Subscription */
-    //from dbwNode
+    // from Autoware
+    rclcpp::Subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>::SharedPtr
+        sub_control_cmd_;
+    rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::GearCommand>::SharedPtr sub_gear_cmd_;
+    rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand>::SharedPtr
+        sub_turn_indicators_cmd_;
+    rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::HazardLightsCommand>::SharedPtr
+        sub_hazard_lights_cmd_;
+    rclcpp::Subscription<ActuationCommandStamped>::SharedPtr sub_actuation_cmd_;
+    rclcpp::Subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>::SharedPtr sub_emergency_;
+
+    // from dbwNode
     rclcpp::Subscription<can_msgs::msg::Frame>::SharedPtr sub_can_;
     rclcpp::Subscription<dbw_ford_msgs::msg::BrakeReport>::SharedPtr sub_brake_;
     rclcpp::Subscription<dbw_ford_msgs::msg::ThrottleReport>::SharedPtr sub_throttle_;
@@ -139,19 +173,33 @@ private:
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_sys_enable_; // Deprecated message
 
     /* Publisher */
+    // To UlcNode
+    rclcpp::Publisher<dataspeed_ulc_msgs::msg::UlcCmd>::SharedPtr pub_ulc_cmd_;
+
+
     // To Autoware
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::ControlModeReport>::SharedPtr
         pub_control_mode_;
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::VelocityReport>::SharedPtr pub_vehicle_twist_;
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::SteeringReport>::SharedPtr
         pub_steering_status_;
-    rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::GearReport>::SharedPtr gear_status_;
+    rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::GearReport>::SharedPtr pub_gear_status_;
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport>::SharedPtr
         pub_turn_indicators_status_;
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::HazardLightsReport>::SharedPtr
         pub_hazard_lights_status_;
     rclcpp::Publisher<ActuationStatusStamped>::SharedPtr pub_actuation_status_;
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
-    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::pub_SharedPtr pub_door_status_;   
+    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::pub_SharedPtr pub_door_status_;  
+
+    dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd_;
+
+      /* input values */
+    ActuationCommandStamped::ConstSharedPtr actuation_cmd_ptr_;
+    autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr control_cmd_ptr_;
+    autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand::ConstSharedPtr turn_indicators_cmd_ptr_;
+    autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
+    autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
+ 
     }
 }
