@@ -131,6 +131,16 @@ private:
         const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt,
         const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt);
+    void callbackSteeringRpt(
+        const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt);
+    void callbackControlModeReport(const dataspeed_ulc_msgs::UlcReport report);
+    void callbackGearReport();
+    void callbackTurnIndictorsReport();
+    void callbackControlCmd(
+        autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+    std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport &gear_rpt)
+    int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
+
 
     /* Set up parameters */
     std::string base_frame_id_;
@@ -201,5 +211,10 @@ private:
     autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
     autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
  
+    dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt_ptr,
+    dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt_ptr,
+    dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt_ptr,
+    dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt_ptr,
+    dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt_ptr
     }
 }

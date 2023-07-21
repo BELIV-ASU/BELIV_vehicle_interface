@@ -55,7 +55,7 @@ BelivVehInterface::BelivVehInterface()
     // sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2);
     {
         auto bind = std::bind(&BelivVehInterface::callbackMisc1);
-        sub_gear_ = create_subscription<dbw_ford_msgs::msg::GearReport>("gear_report", 2, bind);
+        sub_misc_1_ = create_subscription<dbw_ford_msgs::msg::Misc1Report>("misc_1_report", 2, bind);
     }
     // sub_misc_1_ = create_subscription<dbw_ford_msgs::msg::Misc1Report>("misc_1_report", 2);
     sub_wheel_speeds_ = create_subscription<dbw_ford_msgs::msg::WheelSpeedReport>("wheel_speed_report", 2);
@@ -118,7 +118,7 @@ BelivVehInterface::BelivVehInterface()
         create_publisher<tier4_api_msgs::msg::DoorStatus>("/vehicle/status/door_status", 1);
 }
 
-void BelivVehInterface::callbackRpt(
+/* void BelivVehInterface::callbackRpt(
     const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
     const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
     const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt,
@@ -142,10 +142,14 @@ void BelivVehInterface::callbackRpt(
         calculateVariableGearRatio(current_velocity, current_steer_wheel);
     const double current_steer = current_steer_wheel / adaptive_gear_ratio + steering_offset_;
 
-
+ */
     
 void BelivVehInterface::callbackSteeringRpt(const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt)
 {
+    std_msgs::msg::Header header;
+    header.frame_id = base_frame_id_;
+    header.stamp = get_clock()->now();
+    
     double wheelbase = 2.98;
     const double current_velocity = steering_rpt.speed;
     const double current_steer_wheel = steering_rpt.steering_wheel_angle;  // current vehicle steering wheel angle [rad]
@@ -177,6 +181,10 @@ void BelivVehInterface::callbackSteeringRpt(const dbw_ford_msgs::msg::SteeringRe
 /* publish vehicle status control_mode */
 void BelivVehInterface::callbackControlModeReport(const dataspeed_ulc_msgs::UlcReport report)
     {
+        std_msgs::msg::Header header;
+        header.frame_id = base_frame_id_;
+        header.stamp = get_clock()->now();
+
         autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
         control_mode_msg.stamp = header.stamp;
 
@@ -191,11 +199,16 @@ void BelivVehInterface::callbackControlModeReport(const dataspeed_ulc_msgs::UlcR
 
 
 /* publish current shift */
-void BelivVehInterface::callbackGearReport()
+void BelivVehInterface::callbackGearReport(dbw_ford_msgs::msg::GearReport gear_rpt)
 {
+    std_msgs::msg::Header header;
+    header.frame_id = base_frame_id_;
+    header.stamp = get_clock()->now();
+
+    gear_cmd_rpt_ptr_ = gear_rpt;
     autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
     gear_report_msg.stamp = header.stamp;
-    const auto opt_gear_report = toAutowareShiftReport(*gear_cmd_rpt_ptr_);
+    const auto opt_gear_report = toAutowareShiftReport(*gear_rpt_ptr_);
     if (opt_gear_report) {
         gear_report_msg.report = *opt_gear_report;
         pub_gear_status_->publish(gear_report_msg);
@@ -204,12 +217,16 @@ void BelivVehInterface::callbackGearReport()
 
 
 /*publish TurnIndicatorsReport*/
-void belivVehInterface::callbackTurnIndictorsReport
+void BelivVehInterface::callbackTurnIndictorsReport()
 {
-    autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
-    turn_msg.stamp = header.stamp;
-    turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
-    pub_turn_indicators_status_->publish(turn_msg);
+  std_msgs::msg::Header header;
+  header.frame_id = base_frame_id_;
+  header.stamp = get_clock()->now();
+
+  autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport turn_msg;
+  turn_msg.stamp = header.stamp;
+  turn_msg.report = toAutowareTurnIndicatorsReport(*turn_rpt);
+  pub_turn_indicators_status_->publish(turn_msg);
 
     autoware_auto_vehicle_msgs::msg::HazardLightsReport hazard_msg;
     hazard_msg.stamp = header.stamp;
@@ -217,25 +234,8 @@ void belivVehInterface::callbackTurnIndictorsReport
     pub_hazard_lights_status_->publish(hazard_msg);
 }
 
-    /*publish ActuationStatusStamped*/
-    {
-        ActuationStatusStamped actuation_status;
-        actuation_status.header = header;
-        actuation_status.status.accel_status = accel_rpt_ptr_->output;
-        actuation_status.status.brake_status = brake_rpt_ptr_->output;
-        actuation_status.status.steer_status = current_steer;
-        pub_actuation_status_->publish(actuation_status);  
-    }
 
-    /*publish SteeringWheelStatusStamped*/
-    {
-        SteeringWheelStatusStamped steering_wheel_status_msg;
-        steering_wheel_status_msg.stamp = header.stamp;
-        steering_wheel_status_msg.data = current_steer_wheel;
-        pub_steering_wheel_status_->publish(steering_wheel_status_msg);
-    }
 
-}
 
 void BelivVehInterface::callbackControlCmd(
   autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
@@ -274,5 +274,58 @@ void BelivVehInterface::callbackControlCmd(
   pub_ulc_cmd_->publish(ucl_cmd);
 }
 
+std::optional<int32_t> BelivVehInterface::toAutowareShiftReport(
+  const dbw_ford_msgs::msg::GearReport &gear_rpt)
+{
+  using autoware_auto_vehicle_msgs::msg::GearReport;
+  using dbw_ford_msgs::msg::GearReport;
 
+  if (gear_rpt.gear == GearReport::PARK) {
+    return GearReport::PARK;
+  }
+  if (gear_rpt.gear == GearReport::REVERSE) {
+    return GearReport::REVERSE;
+  }
+  if (gear_rpt.gear == GearReport::NEUTRAL) {
+    return GearReport::NEUTRAL;
+  }
+  if (gear_rpt.gear == GearReport::DRIVE) {
+    return GearReport::DRIVE;
+  }
+  if (gear_rpt.gear == GearReport::LOW) {
+    return GearReport::LOW;
+  }
+  return {};
+}
+
+int32_t BelivVehInterface::toAutowareTurnIndicatorsReport(
+  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
+{
+  using autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport;
+  using dbw_ford_msgs::msg::Misc1Report;
+  using dbw_ford_msgs::msg::TurnSinal;
+
+  if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::RIGHT){
+    return TurnIndicatorsReport::ENABLE_RIGHT;
+  } else if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::LEFT){
+        return TurnIndicatorsReport::ENABLE_LEFT;
+  } else if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::NONE){
+    return TurnIndicatorsReport::DISABLE;
+  }
+  return TurnIndicatorsReport::DISABLE;
+}
+
+int32_t DbwNode::toAutowareHazardLightsReport(
+  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
+{
+  using autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport;
+  using dbw_ford_msgs::msg::Misc1Report;
+  using dbw_ford_msgs::msg::TurnSinal;
+
+  if (misc1_rpt->TurnSignal.value == dbw_ford_msgs::msg::HAZARD) {
+    return HazardLightsReport::ENABLE;
+  }
+
+  return HazardLightsReport::DISABLE;
+}
 }
