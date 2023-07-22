@@ -98,10 +98,7 @@
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_status_stamped.hpp>
 #include <tier4_vehicle_msgs/msg/steering_wheel_status_stamped.hpp>
-#include <tier4_vehicle_msgs/msg/vehicle_emergency_stamped.hpp>
-
-#include <message_filters/subscriber.h>
-#include <message_filters/sync_policies/approximate_time.h>
+#include <tier4_vehicle_msgs/msg/vehicle_emergBeliveVehInterfaceimate_time.h>
 #include <message_filters/synchronizer.h>
 
 #include <algorithm>
@@ -200,9 +197,9 @@ private:
         pub_hazard_lights_status_;
     rclcpp::Publisher<ActuationStatusStamped>::SharedPtr pub_actuation_status_;
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
-    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::pub_SharedPtr pub_door_status_;  
+    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;  
 
-    dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd_;
+    //dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd_;
 
       /* input values */
     ActuationCommandStamped::ConstSharedPtr actuation_cmd_ptr_;
