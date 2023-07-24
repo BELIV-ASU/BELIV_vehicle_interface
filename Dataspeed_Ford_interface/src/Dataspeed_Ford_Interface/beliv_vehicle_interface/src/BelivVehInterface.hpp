@@ -98,7 +98,10 @@
 #include <tier4_vehicle_msgs/msg/actuation_command_stamped.hpp>
 #include <tier4_vehicle_msgs/msg/actuation_status_stamped.hpp>
 #include <tier4_vehicle_msgs/msg/steering_wheel_status_stamped.hpp>
-#include <tier4_vehicle_msgs/msg/vehicle_emergBeliveVehInterfaceimate_time.h>
+#include <tier4_vehicle_msgs/msg/vehicle_emergency_stamped.hpp>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
 
 #include <algorithm>
@@ -109,7 +112,7 @@
 #include <string>
 
 namespace dbw_ford_can {
-    
+ 
 class BelivVehInterface : public rclcpp::Node
 {
 public:
@@ -120,32 +123,33 @@ public:
     BelivVehInterface();
 
 private:
+  typedef message_filters::sync_policies::ApproximateTime<
+    dbw_ford_msgs::msg::SteeringReport, dbw_ford_msgs::msg::GearReport,
+    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::UlcReport, 
+    autoware_auto_control_msgs::msg::AckermannControlCommand>
+    BelivFeedbacksSyncPolicy;    
     void callcackControlCmd(
         autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
-    void callbackRpt(
-        const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
+    void callbackInterface(
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
-        const dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt,
-        const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt,
-        const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt);
-    void callbackSteeringRpt(
-        const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt);
-    void callbackControlModeReport(const dataspeed_ulc_msgs::UlcReport report);
-    void callbackGearReport();
-    void callbackTurnIndictorsReport();
-    void callbackControlCmd(
-        autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+        const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
+        const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
+        const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt,
+        const autoware_auto_control_msgs::msg::AckermannControlCommand ackermann_cmd)
     std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport &gear_rpt)
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
 
 
-    /* Set up parameters */
+    /* parameters */
     std::string base_frame_id_;
+    double wheel_base_;
+    double steering_ratio_;
+    double acker_wheelbase_; // 112.2 inches
+    double track_width;
 
     /* Subscription */
     // from Autoware
-    rclcpp::Subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>::SharedPtr
-        sub_control_cmd_;
+    std::unique_ptr<message_filters::Subscriber<autoware_auto_control_msgs::msg::AckermannControlCommand>> sub_control_cmd_;
     rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::GearCommand>::SharedPtr sub_gear_cmd_;
     rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand>::SharedPtr
         sub_turn_indicators_cmd_;
@@ -153,14 +157,17 @@ private:
         sub_hazard_lights_cmd_;
     rclcpp::Subscription<ActuationCommandStamped>::SharedPtr sub_actuation_cmd_;
     rclcpp::Subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>::SharedPtr sub_emergency_;
-
+    
     // from dbwNode
     rclcpp::Subscription<can_msgs::msg::Frame>::SharedPtr sub_can_;
     rclcpp::Subscription<dbw_ford_msgs::msg::BrakeReport>::SharedPtr sub_brake_;
     rclcpp::Subscription<dbw_ford_msgs::msg::ThrottleReport>::SharedPtr sub_throttle_;
-    rclcpp::Subscription<dbw_ford_msgs::msg::SteeringReport>::SharedPtr sub_steering_;
-    rclcpp::Subscription<dbw_ford_msgs::msg::GearReport>::SharedPtr sub_gear_;
-    rclcpp::Subscription<dbw_ford_msgs::msg::Misc1Report>::SharedPtr sub_misc_1_;
+    std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::SteeringReport>> sub_steering_;
+    std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::GearReport>> sub_gear_;
+    std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::Misc1Report>> sub_misc_1_;
+    //rclcpp::Subscription<dbw_ford_msgs::msg::SteeringReport>::SharedPtr sub_steering_;
+    //rclcpp::Subscription<dbw_ford_msgs::msg::GearReport>::SharedPtr sub_gear_;
+    //rclcpp::Subscription<dbw_ford_msgs::msg::Misc1Report>::SharedPtr sub_misc_1_;
     rclcpp::Subscription<dbw_ford_msgs::msg::WheelSpeedReport>::SharedPtr sub_wheel_speeds_;
     rclcpp::Subscription<dbw_ford_msgs::msg::WheelPositionReport>::SharedPtr sub_wheel_positions_;
     rclcpp::Subscription<dbw_ford_msgs::msg::TirePressureReport>::SharedPtr sub_tire_pressure_;
@@ -179,6 +186,12 @@ private:
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_vin_;      // Deprecated message
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_sys_enable_; // Deprecated message
 
+    // from UlcNode
+    std::unique_ptr<message_filters::Subscriber<dataspeed_ulc_msgs::UlcReport>> sub_ulc_rpt_;
+    //rclcpp::Subscription<dataspeed_ulc_msgs::UlcReport>::SharedPtr sub_ulc_rpt;
+
+    std::unique_ptr<message_filters::Synchronizer<BelivFeedbacksSyncPolicy>> beliv_feedbacks_sync_;
+    
     /* Publisher */
     // To UlcNode
     rclcpp::Publisher<dataspeed_ulc_msgs::msg::UlcCmd>::SharedPtr pub_ulc_cmd_;
@@ -208,10 +221,9 @@ private:
     autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
     autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
  
-    dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt_ptr,
-    dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt_ptr,
-    dbw_ford_msgs::msg::ThrottleReport::ConstSharedPtr throttle_rpt_ptr,
-    dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr brake_rpt_ptr,
-    dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt_ptr
-    }
+    dbw_ford_msgs::msg::SteeringReport::ConstSharePtr sub_steering_ptr_;
+    dbw_ford_msgs::msg::GearReport::ConstSharePtr sub_gear_ptr_;
+    dbw_ford_msgs::msg::Misc1Report::ConstSharePtr sub_misc1_ptr_;
+    dataspeed_ulc_msgs::UlcReport::ConstSharePtr sub_ulc_rpt_ptr_;
+}
 }
