@@ -42,10 +42,15 @@ BelivVehInterface::BelivVehInterface()
 {
   /* set up parameters */
   base_frame_id_ = declare_parameter("base_frame_id", "base_link");   //Frame ID
+  command_timeout_ms_ = declare_parameter("command_timeout_ms", 1000);
+  loop_rate_ = declare_parameter("loop_rate", 30.0);
   wheelbase = vehicle_info_.wheel_base_m;
-  steering_ratio = 14.6;
+  steering_ratio_ = 14.6;
 
   /* subscriber */
+  using std::placeholders::_1;
+  using std::placeholders::_2;
+
   //from DbwNode
   sub_brake_ = create_subscription<dbw_ford_msgs::msg::BrakeReport>("/vehicle/brake_report", 2);
   sub_throttle_ = create_subscription<dbw_ford_msgs::msg::ThrottleReport>("/vehicle/throttle_report", 2);
@@ -54,7 +59,7 @@ BelivVehInterface::BelivVehInterface()
   sub_gear_ = std::make_unique<message_filters::Subscriber<dbw_ford_msgs::msg::GearReport>>(
     this, "/vehicle/gear_report");
   sub_misc_1_ = std::make_unique<message_filters::Subscriber<dbw_ford_msgs::msg::Misc1Report>>(
-    this, "misc_1_report");
+    this, "/vehicle/misc_1_report");
   sub_wheel_speeds_ = create_subscription<dbw_ford_msgs::msg::WheelSpeedReport>("/vehicle/wheel_speed_report", 2);
   sub_wheel_positions_ = create_subscription<dbw_ford_msgs::msg::WheelPositionReport>("/vehicle/wheel_position_report", 2);
   sub_tire_pressure_ = create_subscription<dbw_ford_msgs::msg::TirePressureReport>("/vehicle/tire_pressure_report", 2);
@@ -71,24 +76,35 @@ BelivVehInterface::BelivVehInterface()
   sub_twist_ = create_subscription<geometry_msgs::msg::TwistStamped>("/vehicle/twist", 10);   
 
   //from Autoware
-  sub_control_cmd_ = std::make_unique<message_filters::Subscriber<utoware_auto_control_msgs::msg::AckermannControlCommand>>(
-    this, "/control/command/control_cmd");
-  sub_gear_cmd_ = create_subscription<GearCommand>("input/gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_gear_cmd_ = *msg; });
-  sub_manual_gear_cmd_ = create_subscription<GearCommand>("input/manual_gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_manual_gear_cmd_ = *msg; });
+  sub_control_cmd_ = create_subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>(
+    "/control/command/control_cmd", 1, std::bind(&BelivVehInterface::callbackControlCmd, this, _1));
+  //sub_control_cmd_ = std::make_unique<message_filters::Subscriber<Autoware_auto_control_msgs::msg::AckermannControlCommand>>(
+    //this, "/control/command/control_cmd");
+  //sub_gear_cmd_ = create_subscription<GearCommand>("input/gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_gear_cmd_ = *msg; });
+  //sub_manual_gear_cmd_ = create_subscription<GearCommand>("input/manual_gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_manual_gear_cmd_ = *msg; });
   sub_turn_indicators_cmd_ = create_subscription<TurnIndicatorsCommand>("input/turn_indicators_command", QoS{1},std::bind(&SimplePlanningSimulator::on_turn_indicators_cmd, this, _1));
   sub_hazard_lights_cmd_ = create_subscription<HazardLightsCommand>("input/hazard_lights_command", QoS{1},std::bind(&SimplePlanningSimulator::on_hazard_lights_cmd, this, _1));
+
+  sub_emergency_ = create_subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>(
+    "/control/command/emergency_cmd", 1,
+    std::bind(&BelivVehInterface::callbackEmergencyCmd, this, _1));
+  control_mode_server_ = create_service<ControlModeCommand>(
+    "input/control_mode_request", std::bind(&BelivVehInterface::onControlModeRequest, this, _1, _2));
 
   //from UlcNode
   sub_ulc_rpt_ = std::make_unique<message_filters::Subscriber<dataspeed_ulc_msgs::UlcReport>>(
     this, "/vehicle/ulc_report");
 
+  //from DbwNode
+  sub_enable_ = create_subscription<td_msgs::msg::Bool>("/vehicle/dbw_enabled", clcpp::QoS(2).transient_local());   
+
   //synchronizer
   beliv_feedbacks_sync_ =
     std::make_unique<message_filters::Synchronizer<BelivFeedbacksSyncPolicy>>(
-    BelivFeedbacksSyncPolicy(10), *sub_steering_, *sub_gear_, *sub_misc_1_, *sub_ulc_rpt_,*sub_control_cmd_);
+    BelivFeedbacksSyncPolicy(10), *sub_steering_, *sub_gear_, *sub_misc_1_, *sub_ulc_rpt_);
   beliv_feedbacks_sync_->registerCallback(std::bind(
-    &BelivVehInterface::callbackBelivRpt, this, std::placeholders::_1, std::placeholders::_2,
-    std::placeholders::_3, std::placeholders::_4, std::placeholders::_5));
+    &BelivVehInterface::callbackInterface, this, std::placeholders::_1, std::placeholders::_2,
+    std::placeholders::_3, std::placeholders::_4));
 
 
   /* publisher */
@@ -115,29 +131,34 @@ BelivVehInterface::BelivVehInterface()
     create_publisher<SteeringWheelStatusStamped>("/vehicle/status/steering_wheel_status", 1);
   pub_door_status_ =
     create_publisher<tier4_api_msgs::msg::DoorStatus>("/vehicle/status/door_status", 1);
+
+
+  // Timer
+  const auto period_ns = rclcpp::Rate(loop_rate_).period();
+  timer_ = rclcpp::create_timer(
+    this, get_clock(), period_ns, std::bind(&BelivVehInterface::publishCommands, this));
+
 }
 
 void BelivVehInterface::callbackInterface(
   const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
   const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-  const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt,
-  const autoware_auto_control_msgs::msg::AckermannControlCommand ackermann_cmd)
+  const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt)
 {
   std_msgs::msg::Header header;
   header.frame_id = base_frame_id_;
   header.stamp = get_clock()->now();
 
+  is_dbw_rpt_received_ = ture;
   sub_steering_ptr_ = steering_rpt;
   sub_gear_ptr_ = gear_rpt;
   sub_misc1_ptr_ = misc1_rpt;
   sub_ulc_rpt_ptr_ = ulc_rpt;
-  control_cmd_ptr_ = ackermann_cmd;
 
-  const double current_velocity = sub_teering_ptr.speed;
-  const double current_steer_wheel =
-    sub_teering_ptr.steering_wheel_angle;  // current vehicle steering wheel angle [rad]
-  const double current_steer = current_steer_wheel / / steering_ratio;
+  const double current_velocity = sub_steering_ptr.speed;
+  const double current_steer_wheel = sub_steering_ptr.steering_wheel_angle;  // current vehicle steering wheel angle [rad]
+  const double current_steer = current_steer_wheel / steering_ratio_;
 
   /* publish steering wheel status */
   {
@@ -169,12 +190,11 @@ void BelivVehInterface::callbackInterface(
     autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
     control_mode_msg.stamp = header.stamp;
 
-    if (sub_ulc_rpt_ptr_->pedals_enabled && sub_ulc_rpt_ptr_->steering_enabled && !sub_ulc_rpt_ptr_->override_latched) {
+    if (sub_enable_) {
       control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
     } else {
       control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
     }
-
     pub_control_mode_->publish(control_mode_msg);
   }
 
@@ -204,10 +224,11 @@ void BelivVehInterface::callbackInterface(
 
   {
     acker_wheelbase_ = 2.98; // 112.2 inches
-    track_width = 1.61 ;
+    track_width = 1.61;
     dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd;
 
   // Populate command fields
+    ulc_cmd.linear_velocity = control_cmd_ptr_->longitudinal.speeds;
     ulc_cmd.accel_cmd = 0.0; // Not used when pedals_mode is SPEED_MODE
     ulc_cmd.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
     ulc_cmd.coast_decel = false;
@@ -229,7 +250,7 @@ void BelivVehInterface::callbackInterface(
     ulc_cmd.jerk_limit_brake = 0;
 
     // Publish command message
-    pub_ulc_cmd_->publish(ucl_cmd);
+    pub_ulc_cmd_->publish(ulc_cmd);
 }
 }
 
@@ -257,6 +278,125 @@ std::optional<int32_t> BelivVehInterface::toAutowareShiftReport(
   return {};
 }
 
+void BelivVehInterface::publishCommands()
+{
+  /* guard */
+  if ( !control_cmd_ptr_ || !is_dbw_rpt_received_ ) {
+    RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "vehicle_cmd = %d, dbw_msgs = %d", control_cmd_ptr_ != nullptr,
+      is_dbw_rpt_received_);
+    return;
+  }
+
+  const rclcpp::Time current_time = get_clock()->now();
+  /* check emergency and timeout */
+  const double control_cmd_delta_time_ms =
+    (current_time - control_command_received_time_).seconds() * 1000.0;
+  bool timeouted = false;
+  const int t_out = command_timeout_ms_;
+  if (t_out >= 0 && (control_cmd_delta_time_ms > t_out )) {
+    timeouted = true;
+  }
+  if (is_emergency_ || timeouted) {
+    RCLCPP_ERROR(
+      get_logger(), "Emergency Stopping, emergency = %d, timeouted = %d", is_emergency_, timeouted);
+    //desired_throttle = 0.0;
+    //desired_brake = emergency_brake_;
+  }
+
+  /* check clear flag */
+  bool clear_override = false;
+  if (is_pacmod_enabled_ == true) {
+    is_clear_override_needed_ = false;
+  } else if (is_clear_override_needed_ == true) {
+    clear_override = true;
+  }
+
+  /* make engage cmd false when a driver overrides vehicle control */
+  if (!prev_override_ && global_rpt_ptr_->override_active) {
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "Pacmod is overridden, enable flag is back to false");
+    sub_enable_ = false;
+  }
+  prev_override_ = global_rpt_ptr_->override_active;
+
+  /* make engage cmd false when vehicle report is timed out, e.g. E-stop is depressed */
+  const bool report_timed_out = ((current_time - global_rpt_ptr_->header.stamp).seconds() > 1.0);
+  if (report_timed_out) {
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "Pacmod report is timed out, enable flag is back to false");
+    sub_enable_ = false;
+  }
+
+  /* make engage cmd false when vehicle fault is active */
+  if (global_rpt_ptr_->pacmod_sys_fault_active) {
+    RCLCPP_WARN_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "Pacmod fault is active, enable flag is back to false");
+    sub_enable_ = false;
+  }
+  RCLCPP_DEBUG(
+    get_logger(),
+    "is_pacmod_enabled_ = %d, is_clear_override_needed_ = %d, clear_override = "
+    "%d",
+    is_pacmod_enabled_, is_clear_override_needed_, clear_override);
+
+  /* check shift change */
+  const double brake_for_shift_trans = 0.7;
+  uint16_t desired_shift = gear_cmd_rpt_ptr_->output;
+  if (std::fabs(current_velocity) < 0.1) {  // velocity is low -> the shift can be changed
+    if (toPacmodShiftCmd(*gear_cmd_ptr_) != gear_cmd_rpt_ptr_->output) {  // need shift
+                                                                          // change.
+      desired_throttle = 0.0;
+      desired_brake = brake_for_shift_trans;  // set brake to change the shift
+      desired_shift = toPacmodShiftCmd(*gear_cmd_ptr_);
+      RCLCPP_DEBUG(
+        get_logger(), "Doing shift change. current = %d, desired = %d. set brake_cmd to %f",
+        gear_cmd_rpt_ptr_->output, toPacmodShiftCmd(*gear_cmd_ptr_), desired_brake);
+    }
+  }
+}
+
+void BelivVehInterface::callbackControlCmd(
+  const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
+{
+  control_command_received_time_ = this->now();
+  control_cmd_ptr_ = msg;
+}
+
+void BelivVehInterface::onControlModeRequest(
+  const ControlModeCommand::Request::SharedPtr request,
+  const ControlModeCommand::Response::SharedPtr response)
+{
+  if (request->mode == ControlModeCommand::Request::AUTONOMOUS) {
+    sub_enable_ = true;
+    is_clear_override_needed_ = true;
+    response->success = true;
+    return;
+  }
+
+  if (request->mode == ControlModeCommand::Request::MANUAL) {
+    sub_enable_ = false;
+    is_clear_override_needed_ = true;
+    response->success = true;
+    return;
+  }
+
+  RCLCPP_ERROR(get_logger(), "unsupported control_mode!!");
+  response->success = false;
+  return;
+}
+
+void BelivVehInterface::callbackEmergencyCmd(
+  const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg)
+{
+  is_emergency_ = msg->emergency;
+}
+
+
 int32_t BelivVehInterface::toAutowareTurnIndicatorsReport(
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
 {
@@ -274,6 +414,8 @@ int32_t BelivVehInterface::toAutowareTurnIndicatorsReport(
   return TurnIndicatorsReport::DISABLE;
 }
 
+
+
 int32_t DbwNode::toAutowareHazardLightsReport(
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt;)
 {
@@ -287,4 +429,5 @@ int32_t DbwNode::toAutowareHazardLightsReport(
 
   return HazardLightsReport::DISABLE;
 }
+
 }

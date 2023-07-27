@@ -142,6 +142,9 @@ private:
 
     /* parameters */
     std::string base_frame_id_;
+    int command_timeout_ms_;  // vehicle_cmd timeout [ms]
+    bool is_dbw_rpt_received_ = false;
+    double loop_rate_;           // [Hz]
     double wheel_base_;
     double steering_ratio_;
     double acker_wheelbase_; // 112.2 inches
@@ -155,7 +158,7 @@ private:
         sub_turn_indicators_cmd_;
     rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::HazardLightsCommand>::SharedPtr
         sub_hazard_lights_cmd_;
-    rclcpp::Subscription<ActuationCommandStamped>::SharedPtr sub_actuation_cmd_;
+    //rclcpp::Subscription<ActuationCommandStamped>::SharedPtr sub_actuation_cmd_;
     rclcpp::Subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>::SharedPtr sub_emergency_;
     
     // from dbwNode
@@ -165,9 +168,6 @@ private:
     std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::SteeringReport>> sub_steering_;
     std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::GearReport>> sub_gear_;
     std::unique_ptr<message_filters::Subscriber<dbw_ford_msgs::msg::Misc1Report>> sub_misc_1_;
-    //rclcpp::Subscription<dbw_ford_msgs::msg::SteeringReport>::SharedPtr sub_steering_;
-    //rclcpp::Subscription<dbw_ford_msgs::msg::GearReport>::SharedPtr sub_gear_;
-    //rclcpp::Subscription<dbw_ford_msgs::msg::Misc1Report>::SharedPtr sub_misc_1_;
     rclcpp::Subscription<dbw_ford_msgs::msg::WheelSpeedReport>::SharedPtr sub_wheel_speeds_;
     rclcpp::Subscription<dbw_ford_msgs::msg::WheelPositionReport>::SharedPtr sub_wheel_positions_;
     rclcpp::Subscription<dbw_ford_msgs::msg::TirePressureReport>::SharedPtr sub_tire_pressure_;
@@ -185,6 +185,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_twist_;
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_vin_;      // Deprecated message
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_sys_enable_; // Deprecated message
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_enable_;
 
     // from UlcNode
     std::unique_ptr<message_filters::Subscriber<dataspeed_ulc_msgs::UlcReport>> sub_ulc_rpt_;
@@ -208,9 +209,13 @@ private:
         pub_turn_indicators_status_;
     rclcpp::Publisher<autoware_auto_vehicle_msgs::msg::HazardLightsReport>::SharedPtr
         pub_hazard_lights_status_;
-    rclcpp::Publisher<ActuationStatusStamped>::SharedPtr pub_actuation_status_;
+    //rclcpp::Publisher<ActuationStatusStamped>::SharedPtr pub_actuation_status_;
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
-    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;  
+    rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;
+    
+    //service
+    //tier4_api_utils::Service<tier4_external_api_msgs::srv::SetDoor>::SharedPtr srv_;
+    rclcpp::Service<ControlModeCommand>::SharedPtr control_mode_server_;
 
     //dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd_;
 
@@ -221,9 +226,19 @@ private:
     autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
     autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
  
-    dbw_ford_msgs::msg::SteeringReport::ConstSharePtr sub_steering_ptr_;
-    dbw_ford_msgs::msg::GearReport::ConstSharePtr sub_gear_ptr_;
-    dbw_ford_msgs::msg::Misc1Report::ConstSharePtr sub_misc1_ptr_;
-    dataspeed_ulc_msgs::UlcReport::ConstSharePtr sub_ulc_rpt_ptr_;
+    dbw_ford_msgs::msg::SteeringReport sub_steering_ptr_;
+    dbw_ford_msgs::msg::GearReport: sub_gear_ptr_;
+    dbw_ford_msgs::msg::Misc1Report: sub_misc1_ptr_;
+    dataspeed_ulc_msgs::UlcReport sub_ulc_rpt_ptr_;
+
+    bool is_emergency_{false};
+    rclcpp::Time control_command_received_time_;
+
+    void onControlModeRequest(
+        const ControlModeCommand::Request::SharedPtr request,
+        const ControlModeCommand::Response::SharedPtr response);
+    void callbackEmergencyCmd(
+        const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg);
+
 }
 }
