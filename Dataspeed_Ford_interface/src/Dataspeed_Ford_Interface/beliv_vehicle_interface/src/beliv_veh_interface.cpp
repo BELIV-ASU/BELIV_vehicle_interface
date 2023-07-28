@@ -37,14 +37,13 @@
 namespace dbw_ford_can{
 
 BelivVehInterface::BelivVehInterface()
-  :rclcpp::Node("beliv_veh_interface"),
-  vehicle_info_(vehicle_info_util::VehicleInfoUtil(*this).getVehicleInfo())
+  :rclcpp::Node("beliv_veh_interface"))
 {
   /* set up parameters */
   base_frame_id_ = declare_parameter("base_frame_id", "base_link");   //Frame ID
   command_timeout_ms_ = declare_parameter("command_timeout_ms", 1000);
   loop_rate_ = declare_parameter("loop_rate", 30.0);
-  wheelbase = vehicle_info_.wheel_base_m;
+  wheelbase = 2.98;
   steering_ratio_ = 14.6;
 
   /* subscriber */
@@ -307,7 +306,7 @@ void BelivVehInterface::publishCommands()
 
   /* check clear flag */
   bool clear_override = false;
-  if (is_pacmod_enabled_ == true) {
+  if (sub_enable__ == true) {
     is_clear_override_needed_ = false;
   } else if (is_clear_override_needed_ == true) {
     clear_override = true;
@@ -328,7 +327,7 @@ void BelivVehInterface::publishCommands()
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Pacmod report is timed out, enable flag is back to false");
-    sub_enable_ = false;
+    //sub_enable_ = false;
   }
 
   /* make engage cmd false when vehicle fault is active */
@@ -336,13 +335,13 @@ void BelivVehInterface::publishCommands()
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Pacmod fault is active, enable flag is back to false");
-    sub_enable_ = false;
+    //sub_enable_ = false;
   }
   RCLCPP_DEBUG(
     get_logger(),
-    "is_pacmod_enabled_ = %d, is_clear_override_needed_ = %d, clear_override = "
+    "sub_enable__ = %d, is_clear_override_needed_ = %d, clear_override = "
     "%d",
-    is_pacmod_enabled_, is_clear_override_needed_, clear_override);
+    sub_enable__, is_clear_override_needed_, clear_override);
 
   /* check shift change */
  /*  const double brake_for_shift_trans = 0.7;
@@ -372,14 +371,14 @@ void BelivVehInterface::onControlModeRequest(
   const ControlModeCommand::Response::SharedPtr response)
 {
   if (request->mode == ControlModeCommand::Request::AUTONOMOUS) {
-    sub_enable_ = true;
+    //sub_enable_ = true;
     is_clear_override_needed_ = true;
     response->success = true;
     return;
   }
 
   if (request->mode == ControlModeCommand::Request::MANUAL) {
-    sub_enable_ = false;
+    //sub_enable_ = false;
     is_clear_override_needed_ = true;
     response->success = true;
     return;
