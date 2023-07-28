@@ -145,6 +145,8 @@ private:
     std::string base_frame_id_;
     int command_timeout_ms_;  // vehicle_cmd timeout [ms]
     bool is_dbw_rpt_received_ = false;
+    bool is_clear_override_needed_ = false;
+    bool prev_override_ = false;
     double loop_rate_;           // [Hz]
     double wheel_base_;
     double steering_ratio_;
