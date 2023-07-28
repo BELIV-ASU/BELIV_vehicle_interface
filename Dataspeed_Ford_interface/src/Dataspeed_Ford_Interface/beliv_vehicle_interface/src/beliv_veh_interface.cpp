@@ -254,26 +254,24 @@ void BelivVehInterface::callbackInterface(
 }
 
 std::optional<int32_t> BelivVehInterface::toAutowareShiftReport(
-  const dbw_ford_msgs::msg::GearReport &gear_rpt)
+  const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt)
 {
-  using aGearReport = autoware_auto_vehicle_msgs::msg::GearReport;
-  using dGearReport = dbw_ford_msgs::msg::GearReport;
+  using autoware_auto_vehicle_msgs::msg::GearReport;
+  using dbw_ford_msgs::msg::Gear;
 
-  if (gear_rpt.gear == dGearReport::PARK) {
-    return aGearReport::PARK;
+  switch (gear_rpt -> state){
+    case dbw_ford_msgs::msg::Gear::PARK:
+      return autoware_auto_vehicle_msgs::msg::GearReport::PARK;
+  case dbw_ford_msgs::msg::Gear::REVERSE:
+    return autoware_auto_vehicle_msgs::msg::GearReport::REVERSE; 
+  case dbw_ford_msgs::msg::Gear::NEUTRAL:
+    return autoware_auto_vehicle_msgs::msg::GearReport::NEUTRAL;
+  case dbw_ford_msgs::msg::Gear::DRIVE:
+    return autoware_auto_vehicle_msgs::msg::GearReport::DRIVE;
+  case dbw_ford_msgs::msg::Gear::LOW:
+    return autoware_auto_vehicle_msgs::msg::GearReport::LOW;  
   }
-  if (gear_rpt.gear == dGearReport::REVERSE) {
-    return aGearReport::REVERSE;
-  }
-  if (gear_rpt.gear == dGearReport::NEUTRAL) {
-    return aGearReport::NEUTRAL;
-  }
-  if (gear_rpt.gear == dGearReport::DRIVE) {
-    return aGearReport::DRIVE;
-  }
-  if (gear_rpt.gear == dGearReport::LOW) {
-    return acosf32::LOW;
-  }
+
   return {};
 }
 
@@ -306,20 +304,20 @@ void BelivVehInterface::publishCommands()
 
   /* check clear flag */
   bool clear_override = false;
-  if (sub_enable__ == true) {
+  if (sub_enable_ == true) {
     is_clear_override_needed_ = false;
   } else if (is_clear_override_needed_ == true) {
     clear_override = true;
   }
 
   /* make engage cmd false when a driver overrides vehicle control */
-  if (!prev_override_ && sub_brake_.override) {
+  if (!prev_override_ && sub_brake_->override) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Pacmod is overridden, enable flag is back to false");
     sub_enable_ = false;
   }
-  prev_override_ =sub_brake_.override;
+  prev_override_ =sub_brake_->override;
 
   /* make engage cmd false when vehicle report is timed out, e.g. E-stop is depressed */
   const bool report_timed_out = ((current_time - sub_brake_->header.stamp).seconds() > 1.0);
@@ -339,9 +337,9 @@ void BelivVehInterface::publishCommands()
   }*/
   RCLCPP_DEBUG(
     get_logger(),
-    "sub_enable__ = %d, is_clear_override_needed_ = %d, clear_override = "
+    "sub_enable_ = %d, is_clear_override_needed_ = %d, clear_override = "
     "%d",
-    sub_enable__, is_clear_override_needed_, clear_override);
+    sub_enable_, is_clear_override_needed_, clear_override);
 
   /* check shift change */
  /*  const double brake_for_shift_trans = 0.7;

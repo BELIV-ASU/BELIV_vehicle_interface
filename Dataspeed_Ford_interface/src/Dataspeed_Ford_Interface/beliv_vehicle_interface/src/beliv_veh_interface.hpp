@@ -136,7 +136,7 @@ private:
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
         const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt,
         const autoware_auto_control_msgs::msg::AckermannControlCommand ackermann_cmd);
-    std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport &gear_rpt);
+    std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt);
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
     int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
 
