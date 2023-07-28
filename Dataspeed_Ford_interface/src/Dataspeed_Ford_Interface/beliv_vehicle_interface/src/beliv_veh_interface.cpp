@@ -313,16 +313,16 @@ void BelivVehInterface::publishCommands()
   }
 
   /* make engage cmd false when a driver overrides vehicle control */
-  if (!prev_override_ && global_rpt_ptr_->override_active) {
+  if (!prev_override_ && sub_brake_.override) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Pacmod is overridden, enable flag is back to false");
     sub_enable_ = false;
   }
-  prev_override_ = global_rpt_ptr_->override_active;
+  prev_override_ =sub_brake_.override;
 
   /* make engage cmd false when vehicle report is timed out, e.g. E-stop is depressed */
-  const bool report_timed_out = ((current_time - global_rpt_ptr_->header.stamp).seconds() > 1.0);
+  const bool report_timed_out = ((current_time - sub_brake_->header.stamp).seconds() > 1.0);
   if (report_timed_out) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
@@ -331,12 +331,12 @@ void BelivVehInterface::publishCommands()
   }
 
   /* make engage cmd false when vehicle fault is active */
-  if (global_rpt_ptr_->pacmod_sys_fault_active) {
+  /*if (global_rpt_ptr_->pacmod_sys_fault_active) {
     RCLCPP_WARN_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "Pacmod fault is active, enable flag is back to false");
     //sub_enable_ = false;
-  }
+  }*/
   RCLCPP_DEBUG(
     get_logger(),
     "sub_enable__ = %d, is_clear_override_needed_ = %d, clear_override = "
