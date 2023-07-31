@@ -37,13 +37,13 @@
 namespace dbw_ford_can{
 
 BelivVehInterface::BelivVehInterface()
-  :rclcpp::Node("beliv_veh_interface"))
+  :rclcpp::Node("beliv_veh_interface")
 {
   /* set up parameters */
   base_frame_id_ = declare_parameter("base_frame_id", "base_link");   //Frame ID
   command_timeout_ms_ = declare_parameter("command_timeout_ms", 1000);
   loop_rate_ = declare_parameter("loop_rate", 30.0);
-  wheelbase = 2.98;
+  wheel_base_ = 2.98;
   steering_ratio_ = 14.6;
 
   /* subscriber */
@@ -91,7 +91,7 @@ BelivVehInterface::BelivVehInterface()
     "input/control_mode_request", std::bind(&BelivVehInterface::onControlModeRequest, this, _1, _2));
 
   //from UlcNode
-  sub_ulc_rpt_ = std::make_unique<message_filters::Subscriber<dataspeed_ulc_msgs::msg::ulc_report>>(
+  sub_ulc_rpt_ = std::make_unique<message_filters::Subscriber<dataspeed_ulc_msgs::msg::UlcReport>>(
     this, "/vehicle/ulc_report");
 
   //from DbwNode
