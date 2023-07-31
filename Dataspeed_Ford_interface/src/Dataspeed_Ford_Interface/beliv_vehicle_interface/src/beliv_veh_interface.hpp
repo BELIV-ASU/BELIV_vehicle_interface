@@ -31,7 +31,8 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
-#pragma once
+#ifndef BELIV_VEH_INTERFACE__BELIV_VEH_INTERFACE_HPP_
+#define BELIV_VEH_INTERFACE__BELIV_VEH_INTERFACE_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <tier4_api_utils/tier4_api_utils.hpp>
@@ -106,12 +107,12 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <message_filters/synchronizer.h>
 
-/* #include <algorithm>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <memory>
 #include <optional>
-#include <string> */
+#include <string>
 
 namespace dbw_ford_can {
  
@@ -127,20 +128,19 @@ public:
 private:
   typedef message_filters::sync_policies::ApproximateTime<
     dbw_ford_msgs::msg::SteeringReport, dbw_ford_msgs::msg::GearReport,
-    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::UlcReport, 
-    autoware_auto_control_msgs::msg::AckermannControlCommand>
+    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::UlcReport>
     BelivFeedbacksSyncPolicy;    
     void callbackControlCmd(
-        autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+        const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+    void callbackBrakeRpt(const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr rpt);
     void callbackInterface(
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-        dataspeed_ulc_msgs::msg::UlcReport ulc_rpt,
-        const autoware_auto_control_msgs::msg::AckermannControlCommand ackermann_cmd);
-    std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt);
+        dataspeed_ulc_msgs::msg::UlcReport ulc_rpt);
+    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr &gear_rpt);
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
-    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
+    std::optional<int32_t> toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
 
 
     /* parameters */
@@ -218,7 +218,7 @@ private:
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
     rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;
     
-    rclcpp::TimerBase::SharedPtr timer_;
+    //rclcpp::TimerBase::SharedPtr timer_;
 
     //service
     //tier4_api_utils::Service<tier4_external_api_msgs::srv::SetDoor>::SharedPtr srv_;
@@ -233,10 +233,11 @@ private:
     autoware_auto_vehicle_msgs::msg::HazardLightsCommand::ConstSharedPtr hazard_lights_cmd_ptr_;
     autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
  
-    dbw_ford_msgs::msg::SteeringReport sub_steering_ptr_;
-    dbw_ford_msgs::msg::GearReport sub_gear_ptr_;
-    dbw_ford_msgs::msg::Misc1Report sub_misc1_ptr_;
+    dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr sub_steering_ptr_;
+    dbw_ford_msgs::msg::GearReport::ConstSharedPtr sub_gear_ptr_;
+    dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr sub_misc1_ptr_;
     dataspeed_ulc_msgs::msg::UlcReport sub_ulc_rpt_ptr_;
+    dbw_ford_msgs::msg::BrakeReport::ConstPtr sub_brake_ptr_;
 
     bool is_emergency_{false};
     rclcpp::Time control_command_received_time_;
@@ -246,9 +247,9 @@ private:
         const ControlModeCommand::Response::SharedPtr response);
     void callbackEmergencyCmd(
         const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg);
-    void publishCommands(dbw_ford_msgs::msg::BrakeReport brake_rpt);
-    void toAutowareShiftReport(
-        const dbw_ford_msgs::msg::GearReport &gear_rpt);
+    void publishCommands(dbw_ford_msgs::msg::BrakeReport &brake_rpt);
 
 };
 }
+
+#endif
