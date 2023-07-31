@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>beliv_vehicle_interface</name>
+  <version>0.0.0</version>
+  <description>TODO: Package description</description>
+  <maintainer email="jingtaol@asu.edu">beliv</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  
+  <depend>rclcpp</depend>
+  <depend>tier4_api_msgs</depend>
+  <depend>tier4_api_utils</depend>
+  <depend>tier4_debug_msgs</depend>
+  <depend>tier4_external_api_msgs</depend>
+  <depend>tier4_vehicle_msgs</depend>
+  <depend>dbw_ford_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>dataspeed_ulc_msgs</depend>
+  <depend>dataspeed_dbw_common</depend>
+  <depend>autoware_auto_control_msgs</depend>
+  <depend>autoware_auto_vehicle_msgs</depend>
+  <depend>can_msgs</depend>
+  <depend>message_filters</depend>
+  <depend>vehicle_info_util</depend>
+  
+  
+  <build_depend>ament_cmake</build_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>autoware_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
