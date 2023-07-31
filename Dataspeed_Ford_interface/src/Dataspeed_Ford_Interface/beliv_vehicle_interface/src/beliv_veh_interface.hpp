@@ -157,7 +157,7 @@ private:
 
     /* Subscription */
     // from Autoware
-    std::unique_ptr<message_filters::Subscriber<autoware_auto_control_msgs::msg::AckermannControlCommand>> sub_control_cmd_;
+    rclcpp::Subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>::SharedPtr sub_control_cmd_;
     rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::GearCommand>::SharedPtr sub_gear_cmd_;
     rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::TurnIndicatorsCommand>::SharedPtr
         sub_turn_indicators_cmd_;
@@ -218,6 +218,8 @@ private:
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
     rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;
     
+    rclcpp::TimerBase::SharedPtr timer_;
+
     //service
     //tier4_api_utils::Service<tier4_external_api_msgs::srv::SetDoor>::SharedPtr srv_;
     rclcpp::Service<ControlModeCommand>::SharedPtr control_mode_server_;
@@ -232,8 +234,8 @@ private:
     autoware_auto_vehicle_msgs::msg::GearCommand::ConstSharedPtr gear_cmd_ptr_;
  
     dbw_ford_msgs::msg::SteeringReport sub_steering_ptr_;
-    dbw_ford_msgs::msg::GearReport: sub_gear_ptr_;
-    dbw_ford_msgs::msg::Misc1Report: sub_misc1_ptr_;
+    dbw_ford_msgs::msg::GearReport sub_gear_ptr_;
+    dbw_ford_msgs::msg::Misc1Report sub_misc1_ptr_;
     dataspeed_ulc_msgs::msg::UlcReport sub_ulc_rpt_ptr_;
 
     bool is_emergency_{false};
@@ -244,9 +246,7 @@ private:
         const ControlModeCommand::Response::SharedPtr response);
     void callbackEmergencyCmd(
         const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg);
-    void callbackControlCmd(
-        const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
-    void publishCommands();
+    void publishCommands(dbw_ford_msgs::msg::BrakeReport brake_rpt);
     void toAutowareShiftReport(
         const dbw_ford_msgs::msg::GearReport &gear_rpt);
 

@@ -51,15 +51,16 @@ BelivVehInterface::BelivVehInterface()
   using std::placeholders::_2;
 
   //from DbwNode
-  sub_brake_ = create_subscription<dbw_ford_msgs::msg::BrakeReport>("/vehicle/brake_report", 2);
-  sub_throttle_ = create_subscription<dbw_ford_msgs::msg::ThrottleReport>("/vehicle/throttle_report", 2);
+  sub_brake_ = create_subscription<dbw_ford_msgs::msg::BrakeReport>("/vehicle/brake_report", rclcpp::QoS{2}, 
+    std::bind(&BelivVehInterface::publishCommands, this, _1));
+//sub_throttle_ = create_subscription<dbw_ford_msgs::msg::ThrottleReport>("/vehicle/throttle_report", 2);
   sub_steering_ = std::make_unique<message_filters::Subscriber<dbw_ford_msgs::msg::SteeringReport>>(
     this, "/vehicle/steering_report");
   sub_gear_ = std::make_unique<message_filters::Subscriber<dbw_ford_msgs::msg::GearReport>>(
     this, "/vehicle/gear_report");
   sub_misc_1_ = std::make_unique<message_filters::Subscriber<dbw_ford_msgs::msg::Misc1Report>>(
     this, "/vehicle/misc_1_report");
-  sub_wheel_speeds_ = create_subscription<dbw_ford_msgs::msg::WheelSpeedReport>("/vehicle/wheel_speed_report", 2);
+/*  sub_wheel_speeds_ = create_subscription<dbw_ford_msgs::msg::WheelSpeedReport>("/vehicle/wheel_speed_report", 2);
   sub_wheel_positions_ = create_subscription<dbw_ford_msgs::msg::WheelPositionReport>("/vehicle/wheel_position_report", 2);
   sub_tire_pressure_ = create_subscription<dbw_ford_msgs::msg::TirePressureReport>("/vehicle/tire_pressure_report", 2);
   sub_fuel_level_ = create_subscription<dbw_ford_msgs::msg::FuelLevelReport>("/vehicle/fuel_level_report", 2);
@@ -73,7 +74,7 @@ BelivVehInterface::BelivVehInterface()
   sub_gps_vel_ = create_subscription<geometry_msgs::msg::TwistStamped>("/vehicle/gps/vel", 10);
   sub_gps_time_ = create_subscription<sensor_msgs::msg::TimeReference>("/vehicle/gps/time", 10);
   sub_twist_ = create_subscription<geometry_msgs::msg::TwistStamped>("/vehicle/twist", 10);   
-
+ */
   //from Autoware
   sub_control_cmd_ = create_subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>(
     "/control/command/control_cmd", 1, std::bind(&BelivVehInterface::callbackControlCmd, this, _1));
@@ -81,9 +82,10 @@ BelivVehInterface::BelivVehInterface()
     //this, "/control/command/control_cmd");
   //sub_gear_cmd_ = create_subscription<GearCommand>("input/gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_gear_cmd_ = *msg; });
   //sub_manual_gear_cmd_ = create_subscription<GearCommand>("input/manual_gear_command", QoS{1},[this](const GearCommand::SharedPtr msg) { current_manual_gear_cmd_ = *msg; });
+/*   
   sub_turn_indicators_cmd_ = create_subscription<TurnIndicatorsCommand>("input/turn_indicators_command", QoS{1},std::bind(&SimplePlanningSimulator::on_turn_indicators_cmd, this, _1));
   sub_hazard_lights_cmd_ = create_subscription<HazardLightsCommand>("input/hazard_lights_command", QoS{1},std::bind(&SimplePlanningSimulator::on_hazard_lights_cmd, this, _1));
-
+ */
   sub_emergency_ = create_subscription<tier4_vehicle_msgs::msg::VehicleEmergencyStamped>(
     "/control/command/emergency_cmd", 1,
     std::bind(&BelivVehInterface::callbackEmergencyCmd, this, _1));
@@ -95,7 +97,8 @@ BelivVehInterface::BelivVehInterface()
     this, "/vehicle/ulc_report");
 
   //from DbwNode
-  sub_enable_ = create_subscription<td_msgs::msg::Bool>("/vehicle/dbw_enabled", clcpp::QoS(2).transient_local());   
+  sub_enable_ = create_subscription<std_msgs::msg::Bool>("/vehicle/dbw_enabled", rclcpp::QoS(2).transient_local(),
+    std::bind(&BelivVehInterface::publishCommands, this, _1));   
 
   //synchronizer
   beliv_feedbacks_sync_ =
@@ -143,7 +146,7 @@ void BelivVehInterface::callbackInterface(
   const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
   const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-  const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt)
+  dataspeed_ulc_msgs::msg::UlcReport ulc_rpt)
 {
   std_msgs::msg::Header header;
   header.frame_id = base_frame_id_;
@@ -275,8 +278,10 @@ std::optional<int32_t> BelivVehInterface::toAutowareShiftReport(
   return {};
 }
 
-void BelivVehInterface::publishCommands()
+void BelivVehInterface::publishCommands(dbw_ford_msgs::msg::BrakeReport brake_rpt)
 {
+  sub_brake_ =brake_rpt;
+  
   /* guard */
   if ( !control_cmd_ptr_ || !is_dbw_rpt_received_ ) {
     RCLCPP_INFO_THROTTLE(
