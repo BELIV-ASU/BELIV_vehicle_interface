@@ -146,7 +146,7 @@ void BelivVehInterface::callbackInterface(
   const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
   const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-  dataspeed_ulc_msgs::msg::UlcReport ulc_rpt)
+  const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt)
 {
   std_msgs::msg::Header header;
   header.frame_id = base_frame_id_;
@@ -256,8 +256,8 @@ void BelivVehInterface::callbackInterface(
 }
 }
 
-std::optional<int32_t> BelivVehInterface::toAutowareShiftReport(
-  const dbw_ford_msgs::msg::GearReport &gear_rpt)
+int32_t BelivVehInterface::toAutowareShiftReport(
+  const dbw_ford_msgs::msg::GearReport::ConstSharedPtr &gear_rpt)
 {
   using autoware_auto_vehicle_msgs::msg::GearReport;
   using dbw_ford_msgs::msg::Gear;

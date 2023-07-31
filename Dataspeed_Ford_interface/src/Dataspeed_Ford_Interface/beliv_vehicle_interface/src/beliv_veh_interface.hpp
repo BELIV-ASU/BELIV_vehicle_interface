@@ -137,10 +137,10 @@ private:
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-        dataspeed_ulc_msgs::msg::UlcReport ulc_rpt);
+        const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt);
     int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr &gear_rpt);
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
-    std::optional<int32_t> toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
+    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
 
 
     /* parameters */
@@ -236,8 +236,8 @@ private:
     dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr sub_steering_ptr_;
     dbw_ford_msgs::msg::GearReport::ConstSharedPtr sub_gear_ptr_;
     dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr sub_misc1_ptr_;
-    dataspeed_ulc_msgs::msg::UlcReport sub_ulc_rpt_ptr_;
-    dbw_ford_msgs::msg::BrakeReport::ConstPtr sub_brake_ptr_;
+    dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr sub_ulc_rpt_ptr_;
+    dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr sub_brake_ptr_;
 
     bool is_emergency_{false};
     rclcpp::Time control_command_received_time_;
