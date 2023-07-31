@@ -65,7 +65,9 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/msg/time_reference.hpp>
 #include <std_msgs/msg/empty.hpp>
+#include <dataspeed_ulc_msgs/msg/ulc_cmd.hpp>
 #include <dataspeed_ulc_msgs/msg/ulc_report.hpp>
+#
 
 
 // The following messages are deprecated
@@ -125,16 +127,16 @@ public:
 private:
   typedef message_filters::sync_policies::ApproximateTime<
     dbw_ford_msgs::msg::SteeringReport, dbw_ford_msgs::msg::GearReport,
-    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::ulc_report, 
+    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::UlcReport, 
     autoware_auto_control_msgs::msg::AckermannControlCommand>
     BelivFeedbacksSyncPolicy;    
-    void callcackControlCmd(
+    void callbackControlCmd(
         autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
     void callbackInterface(
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-        const dataspeed_ulc_msgs::UlcReport::ConstSharePtr ulc_rpt,
+        dataspeed_ulc_msgs::msg::UlcReport ulc_rpt,
         const autoware_auto_control_msgs::msg::AckermannControlCommand ackermann_cmd);
     std::optional<int32_t> toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt);
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
@@ -191,7 +193,7 @@ private:
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_enable_;
 
     // from UlcNode
-    std::unique_ptr<message_filters::Subscriber<dataspeed_ulc_msgs::UlcReport>> sub_ulc_rpt_;
+    std::unique_ptr<message_filters::Subscriber<dataspeed_ulc_msgs::msg::UlcReport>> sub_ulc_rpt_;
     //rclcpp::Subscription<dataspeed_ulc_msgs::UlcReport>::SharedPtr sub_ulc_rpt;
 
     std::unique_ptr<message_filters::Synchronizer<BelivFeedbacksSyncPolicy>> beliv_feedbacks_sync_;
@@ -232,7 +234,7 @@ private:
     dbw_ford_msgs::msg::SteeringReport sub_steering_ptr_;
     dbw_ford_msgs::msg::GearReport: sub_gear_ptr_;
     dbw_ford_msgs::msg::Misc1Report: sub_misc1_ptr_;
-    dataspeed_ulc_msgs::UlcReport sub_ulc_rpt_ptr_;
+    dataspeed_ulc_msgs::msg::UlcReport sub_ulc_rpt_ptr_;
 
     bool is_emergency_{false};
     rclcpp::Time control_command_received_time_;
@@ -248,5 +250,5 @@ private:
     void toAutowareShiftReport(
         const dbw_ford_msgs::msg::GearReport &gear_rpt);
 
-}
+};
 }
