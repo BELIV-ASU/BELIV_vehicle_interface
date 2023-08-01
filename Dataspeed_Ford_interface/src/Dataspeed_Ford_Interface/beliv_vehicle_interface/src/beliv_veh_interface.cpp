@@ -204,7 +204,7 @@ void BelivVehInterface::callbackInterface(
   {
     autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
     gear_report_msg.stamp = header.stamp;
-    const auto opt_gear_report = toAutowareShiftReport(*sub_gear_ptr_);
+    const auto opt_gear_report = toAutowareShiftReport(sub_gear_ptr_);
     if (opt_gear_report) {
       gear_report_msg.report = opt_gear_report;
       pub_gear_status_->publish(gear_report_msg);
@@ -256,29 +256,29 @@ void BelivVehInterface::callbackInterface(
 }
 }
 
+
 int32_t BelivVehInterface::toAutowareShiftReport(
-  const dbw_ford_msgs::msg::GearReport::ConstSharedPtr &gear_rpt)
+  const dbw_ford_msgs::msg::GearReport gear_rpt)
 {
   using autoware_auto_vehicle_msgs::msg::GearReport;
   using dbw_ford_msgs::msg::Gear;
 
-  if (gear_rpt->state.PARK) {
+  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::PARK) {
     return static_cast<int32_t>(GearReport::PARK);
   }
-  if (gear_rpt->state.REVERSE) {
+  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::REVERSE){
     return static_cast<int32_t>(GearReport::REVERSE);
   }
-  if (gear_rpt->state.NEUTRAL){
+  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::NEUTRAL){
     return static_cast<int32_t>(GearReport::NEUTRAL);
   }
-  if (gear_rpt->state.DRIVE) {
+  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::DRIVE){
     return static_cast<int32_t>(GearReport::DRIVE);
   }
-  if (gear_rpt->state.LOW) {
+  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::LOW){
     return static_cast<int32_t>(GearReport::LOW);
   }
-
-  //return {};
+  return static_cast<int32_t>(GearReport::NONE);
 }
 
 

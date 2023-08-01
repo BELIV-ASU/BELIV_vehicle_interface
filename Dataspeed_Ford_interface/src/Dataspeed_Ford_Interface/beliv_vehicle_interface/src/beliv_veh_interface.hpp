@@ -138,7 +138,7 @@ private:
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
         const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt);
-    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport::ConstSharedPtr &gear_rpt);
+    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport gear_rpt);
     int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
     int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
 
