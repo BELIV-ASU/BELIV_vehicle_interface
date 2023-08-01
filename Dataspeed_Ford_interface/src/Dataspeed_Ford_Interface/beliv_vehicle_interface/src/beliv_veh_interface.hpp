@@ -68,7 +68,7 @@
 #include <std_msgs/msg/empty.hpp>
 #include <dataspeed_ulc_msgs/msg/ulc_cmd.hpp>
 #include <dataspeed_ulc_msgs/msg/ulc_report.hpp>
-#
+
 
 
 // The following messages are deprecated
@@ -138,14 +138,15 @@ private:
         const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
         const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
         const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt);
-    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport gear_rpt);
-    int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
-    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt);
+    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport& gear_rpt);
+    int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
+    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
 
 
     /* parameters */
     std::string base_frame_id_;
     int command_timeout_ms_;  // vehicle_cmd timeout [ms]
+    bool dbw_enable_ =false;
     bool is_dbw_rpt_received_ = false;
     bool is_clear_override_needed_ = false;
     bool prev_override_ = false;
@@ -248,6 +249,7 @@ private:
     void callbackEmergencyCmd(
         const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg);
     void publishCommands(dbw_ford_msgs::msg::BrakeReport &brake_rpt);
+    void recvDbwEnabled(const std_msgs::msg::Bool::ConstSharedPtr msg);
 
 };
 }

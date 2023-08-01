@@ -34,7 +34,6 @@
 
 #include "beliv_veh_interface.hpp"
 
-namespace dbw_ford_can{
 
 BelivVehInterface::BelivVehInterface()
   :rclcpp::Node("beliv_veh_interface")
@@ -98,7 +97,7 @@ BelivVehInterface::BelivVehInterface()
 
   //from DbwNode
   sub_enable_ = create_subscription<std_msgs::msg::Bool>("/vehicle/dbw_enabled", rclcpp::QoS(2).transient_local(),
-    std::bind(&BelivVehInterface::publishCommands, this, _1));   
+    std::bind(&BelivVehInterface::recvDbwEnabled, this, _1));   
 
   //synchronizer
   beliv_feedbacks_sync_ =
@@ -136,9 +135,9 @@ BelivVehInterface::BelivVehInterface()
 
 
   // Timer
-  //const auto period_ns = rclcpp::Rate(loop_rate_).period();
-  //timer_ = rclcpp::create_timer(
-    //this, get_clock(), period_ns, std::bind(&BelivVehInterface::publishCommands, this));
+  const auto period_ns = rclcpp::Rate(loop_rate_).period();
+  timer_ = rclcpp::create_timer(
+    this, get_clock(), period_ns, std::bind(&BelivVehInterface::publishCommands, this));
 
 }
 
@@ -192,7 +191,7 @@ void BelivVehInterface::callbackInterface(
     autoware_auto_vehicle_msgs::msg::ControlModeReport control_mode_msg;
     control_mode_msg.stamp = header.stamp;
 
-    if (sub_enable_) {
+    if (dbw_enable_) {
       control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS;
     } else {
       control_mode_msg.mode = autoware_auto_vehicle_msgs::msg::ControlModeReport::MANUAL;
@@ -204,7 +203,7 @@ void BelivVehInterface::callbackInterface(
   {
     autoware_auto_vehicle_msgs::msg::GearReport gear_report_msg;
     gear_report_msg.stamp = header.stamp;
-    const auto opt_gear_report = toAutowareShiftReport(sub_gear_ptr_);
+    const auto opt_gear_report = toAutowareShiftReport(*sub_gear_ptr_);
     if (opt_gear_report) {
       gear_report_msg.report = opt_gear_report;
       pub_gear_status_->publish(gear_report_msg);
@@ -258,24 +257,24 @@ void BelivVehInterface::callbackInterface(
 
 
 int32_t BelivVehInterface::toAutowareShiftReport(
-  const dbw_ford_msgs::msg::GearReport gear_rpt)
+  const dbw_ford_msgs::msg::GearReport & gear_rpt)
 {
   using autoware_auto_vehicle_msgs::msg::GearReport;
   using dbw_ford_msgs::msg::Gear;
 
-  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::PARK) {
+  if (gear_rpt.state.gear == dbw_ford_msgs::msg::Gear::PARK) {
     return static_cast<int32_t>(GearReport::PARK);
   }
-  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::REVERSE){
+  if (gear_rpt.state.gear == dbw_ford_msgs::msg::Gear::REVERSE){
     return static_cast<int32_t>(GearReport::REVERSE);
   }
-  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::NEUTRAL){
+  if (gear_rpt.state.gear == dbw_ford_msgs::msg::Gear::NEUTRAL){
     return static_cast<int32_t>(GearReport::NEUTRAL);
   }
-  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::DRIVE){
+  if (gear_rpt.state.gear == dbw_ford_msgs::msg::Gear::DRIVE){
     return static_cast<int32_t>(GearReport::DRIVE);
   }
-  if ((*gear_rpt)->state == dbw_ford_msgs::msg::Gear::LOW){
+  if (gear_rpt.state.gear==dbw_ford_msgs::msg::Gear::LOW){
     return static_cast<int32_t>(GearReport::LOW);
   }
   return static_cast<int32_t>(GearReport::NONE);
@@ -300,14 +299,14 @@ void BelivVehInterface::onControlModeRequest(
   const ControlModeCommand::Response::SharedPtr response)
 {
   if (request->mode == ControlModeCommand::Request::AUTONOMOUS) {
-    //sub_enable_ = true;
+    //dbw_enable_ = true;
     is_clear_override_needed_ = true;
     response->success = true;
     return;
   }
 
   if (request->mode == ControlModeCommand::Request::MANUAL) {
-    //sub_enable_ = false;
+    //dbw_enable_ = false;
     is_clear_override_needed_ = true;
     response->success = true;
     return;
@@ -324,19 +323,23 @@ void BelivVehInterface::callbackEmergencyCmd(
   is_emergency_ = msg->emergency;
 }
 
+void BelivVehInterface::recvDbwEnabled(std_msgs::msg::Bool::ConstSharedPtr msg){
+  dbw_enable_ = msg->data;
+}
+
 
 int32_t BelivVehInterface::toAutowareTurnIndicatorsReport(
-  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt)
+  const dbw_ford_msgs::msg::Misc1Report &misc1_rpt)
 {
   using autoware_auto_vehicle_msgs::msg::TurnIndicatorsReport;
   using dbw_ford_msgs::msg::Misc1Report;
   using dbw_ford_msgs::msg::TurnSignal;
 
-  if (misc1_rpt->turn_signal.value == dbw_ford_msgs::msg::TurnSignal::RIGHT){
+  if (misc1_rpt.turn_signal.value == dbw_ford_msgs::msg::TurnSignal::RIGHT){
     return TurnIndicatorsReport::ENABLE_RIGHT;
-  } else if (misc1_rpt->turn_signal.value == dbw_ford_msgs::msg::TurnSignal::LEFT){
+  } else if (misc1_rpt.turn_signal.value == dbw_ford_msgs::msg::TurnSignal::LEFT){
         return TurnIndicatorsReport::ENABLE_LEFT;
-  } else if (misc1_rpt->turn_signal.value == dbw_ford_msgs::msg::TurnSignal::NONE){
+  } else if (misc1_rpt.turn_signal.value == dbw_ford_msgs::msg::TurnSignal::NONE){
     return TurnIndicatorsReport::DISABLE;
   }
   return TurnIndicatorsReport::DISABLE;
@@ -345,17 +348,16 @@ int32_t BelivVehInterface::toAutowareTurnIndicatorsReport(
 
 
 int32_t BelivVehInterface::toAutowareHazardLightsReport(
-  const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr &misc1_rpt)
+  const dbw_ford_msgs::msg::Misc1Report &misc1_rpt)
 {
   using autoware_auto_vehicle_msgs::msg::HazardLightsReport;
   using dbw_ford_msgs::msg::Misc1Report;
   using dbw_ford_msgs::msg::TurnSignal;
 
-  if (misc1_rpt->turn_signal.value == dbw_ford_msgs::msg::TurnSignal::HAZARD) {
+  if (misc1_rpt.turn_signal.value == dbw_ford_msgs::msg::TurnSignal::HAZARD) {
     return HazardLightsReport::ENABLE;
   }
 
   return HazardLightsReport::DISABLE;
 }
 
-}
