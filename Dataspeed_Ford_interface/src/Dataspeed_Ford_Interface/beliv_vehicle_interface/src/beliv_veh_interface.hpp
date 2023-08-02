@@ -114,8 +114,8 @@
 #include <optional>
 #include <string>
 
-namespace dbw_ford_can {
- 
+
+namespace dbw_ford_can { 
 class BelivVehInterface : public rclcpp::Node
 {
 public:
@@ -126,22 +126,11 @@ public:
     BelivVehInterface();
 
 private:
-  typedef message_filters::sync_policies::ApproximateTime<
-    dbw_ford_msgs::msg::SteeringReport, dbw_ford_msgs::msg::GearReport,
-    dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::UlcReport>
-    BelivFeedbacksSyncPolicy;    
-    void callbackControlCmd(
-        const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
-    void callbackBrakeRpt(const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr rpt);
-    void callbackInterface(
-        const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
-        const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
-        const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
-        const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt);
-    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport& gear_rpt);
-    int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
-    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
 
+    typedef message_filters::sync_policies::ApproximateTime<
+        dbw_ford_msgs::msg::SteeringReport, dbw_ford_msgs::msg::GearReport,
+        dbw_ford_msgs::msg::Misc1Report, dataspeed_ulc_msgs::msg::UlcReport>
+        BelivFeedbacksSyncPolicy; 
 
     /* parameters */
     std::string base_frame_id_;
@@ -219,7 +208,7 @@ private:
     rclcpp::Publisher<SteeringWheelStatusStamped>::SharedPtr pub_steering_wheel_status_;
     rclcpp::Publisher<tier4_api_msgs::msg::DoorStatus>::SharedPtr pub_door_status_;
     
-    //rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr timer_;
 
     //service
     //tier4_api_utils::Service<tier4_external_api_msgs::srv::SetDoor>::SharedPtr srv_;
@@ -243,15 +232,26 @@ private:
     bool is_emergency_{false};
     rclcpp::Time control_command_received_time_;
 
+   
+    void callbackControlCmd(
+        const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+    void callbackBrakeRpt(const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr rpt);
+    void callbackInterface(
+        const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,
+        const dbw_ford_msgs::msg::GearReport::ConstSharedPtr gear_rpt,
+        const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
+        const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt);
+    int32_t toAutowareShiftReport(const dbw_ford_msgs::msg::GearReport& gear_rpt);
+    int32_t toAutowareTurnIndicatorsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
+    int32_t toAutowareHazardLightsReport(const dbw_ford_msgs::msg::Misc1Report &misc1_rpt);
     void onControlModeRequest(
         const ControlModeCommand::Request::SharedPtr request,
         const ControlModeCommand::Response::SharedPtr response);
     void callbackEmergencyCmd(
         const tier4_vehicle_msgs::msg::VehicleEmergencyStamped::ConstSharedPtr msg);
-    void publishCommands(dbw_ford_msgs::msg::BrakeReport &brake_rpt);
     void recvDbwEnabled(const std_msgs::msg::Bool::ConstSharedPtr msg);
+    void publishCommands();
 
 };
 }
-
 #endif
