@@ -332,24 +332,31 @@ int32_t BelivVehInterface::toAutowareHazardLightsReport(
 }
 
 void BelivVehInterface::publishCommands(){ 
+  /* guard */
+  if (!control_cmd_ptr_ || !sub_steering_ptr_){
+    RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "vehicle_cmd = %d, steering_rpt = %d", control_cmd_ptr_ !=nullptr,
+      sub_steering_ptr_ !=nullptr
+    );
+  }
 
   const rclcpp::Time current_time = get_clock()->now();
 
   {
-    acker_wheelbase_ = 2.98; // 112.2 inches
+    //wheel_base_ = 2.98; // 112.2 inches
     track_width = 1.61;
     dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd;
 
     ulc_cmd.header.frame_id = base_frame_id_;
     ulc_cmd.header.stamp = current_time;
 
-
-  // Populate command fields
-    ulc_cmd.linear_velocity = control_cmd_ptr_->longitudinal.speed;
+  // Populate command fields 
+    ulc_cmd.linear_velocity = 1;//control_cmd_ptr_->longitudinal.speed;
     ulc_cmd.accel_cmd = 0.0; // Not used when pedals_mode is SPEED_MODE
     ulc_cmd.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
     ulc_cmd.coast_decel = false;
-    ulc_cmd.yaw_command = sub_steering_ptr_->speed * tan(control_cmd_ptr_->lateral.steering_tire_angle) / acker_wheelbase_;
+    ulc_cmd.yaw_command = 1;//sub_steering_ptr_->speed* tan(control_cmd_ptr_->lateral.steering_tire_angle) / wheel_base_;
     ulc_cmd.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
 
 
@@ -365,6 +372,7 @@ void BelivVehInterface::publishCommands(){
     ulc_cmd.lateral_accel = 0;
     ulc_cmd.jerk_limit_throttle = 0;
     ulc_cmd.jerk_limit_brake = 0;
+    printf("ulc_cmd.linear_velocity=%d", ulc_cmd.linear_velocity);
 
     // Publish command message
     pub_ulc_cmd_->publish(ulc_cmd);
