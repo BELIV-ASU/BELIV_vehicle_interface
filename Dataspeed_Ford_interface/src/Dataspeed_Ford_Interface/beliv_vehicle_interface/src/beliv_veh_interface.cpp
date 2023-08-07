@@ -254,8 +254,23 @@ int32_t BelivVehInterface::toAutowareShiftReport(
 void BelivVehInterface::callbackControlCmd(
   const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
 {
+  const double current_speed = sub_steering_ptr_->speed;
   control_command_received_time_ = this->now();
-  control_cmd_ptr_ = msg;
+    // Populate command fields
+  ulc_cmd_.linear_velocity = msg->longitudinal.speed;
+  ulc_cmd_.yaw_command = current_speed* tan(msg->lateral.steering_tire_angle)/wheel_base_;
+  ulc_cmd_.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
+
+  // Set other fields to default values
+  ulc_cmd_.clear = false;
+  ulc_cmd_.enable_pedals = true;
+  ulc_cmd_.enable_shifting = true;
+  ulc_cmd_.enable_steering = true;
+  ulc_cmd_.shift_from_park = true;
+  ulc_cmd_.linear_accel = 0;
+  ulc_cmd_.linear_decel = 0;
+  ulc_cmd_.angular_accel = 0;
+  ulc_cmd_.lateral_accel = 0;
 }
 
 void BelivVehInterface::callbackBrakeRpt(
@@ -341,41 +356,7 @@ void BelivVehInterface::publishCommands(){
     );
   }
 
-  const rclcpp::Time current_time = get_clock()->now();
+  pub_ulc_cmd_->publish(ulc_cmd_);
 
-  {
-    //wheel_base_ = 2.98; // 112.2 inches
-    track_width = 1.61;
-    dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd;
-
-    ulc_cmd.header.frame_id = base_frame_id_;
-    ulc_cmd.header.stamp = current_time;
-
-  // Populate command fields 
-    ulc_cmd.linear_velocity = 1;//control_cmd_ptr_->longitudinal.speed;
-    ulc_cmd.accel_cmd = 0.0; // Not used when pedals_mode is SPEED_MODE
-    ulc_cmd.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
-    ulc_cmd.coast_decel = false;
-    ulc_cmd.yaw_command = 1;//sub_steering_ptr_->speed* tan(control_cmd_ptr_->lateral.steering_tire_angle) / wheel_base_;
-    ulc_cmd.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
-
-
-    // Set other fields to default values
-    ulc_cmd.clear = false;
-    ulc_cmd.enable_pedals = true;
-    ulc_cmd.enable_shifting = true;
-    ulc_cmd.enable_steering = true;
-    ulc_cmd.shift_from_park = false;
-    ulc_cmd.linear_accel = 0;
-    ulc_cmd.linear_decel = 0;
-    ulc_cmd.angular_accel = 0;
-    ulc_cmd.lateral_accel = 0;
-    ulc_cmd.jerk_limit_throttle = 0;
-    ulc_cmd.jerk_limit_brake = 0;
-    printf("ulc_cmd.linear_velocity=%d", ulc_cmd.linear_velocity);
-
-    // Publish command message
-    pub_ulc_cmd_->publish(ulc_cmd);
-  }
 }
 }

@@ -228,6 +228,7 @@ private:
     dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr sub_misc1_ptr_;
     dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr sub_ulc_rpt_ptr_;
     dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr sub_brake_ptr_;
+    dataspeed_ulc_msgs::msg::UlcCmd ulc_cmd_;
 
     bool is_emergency_{false};
     rclcpp::Time control_command_received_time_;
