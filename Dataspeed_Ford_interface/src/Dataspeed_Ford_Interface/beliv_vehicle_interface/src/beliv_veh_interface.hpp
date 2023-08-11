@@ -235,7 +235,7 @@ private:
 
    
     void callbackControlCmd(
-        const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg);
+        const autoware_auto_control_msgs::msg::AckermannControlCommand& msg);
     void callbackBrakeRpt(const dbw_ford_msgs::msg::BrakeReport::ConstSharedPtr rpt);
     void callbackInterface(
         const dbw_ford_msgs::msg::SteeringReport::ConstSharedPtr steering_rpt,

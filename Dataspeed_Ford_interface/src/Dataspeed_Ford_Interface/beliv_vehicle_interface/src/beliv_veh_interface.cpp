@@ -33,6 +33,8 @@
  *********************************************************************/
 
 #include "beliv_veh_interface.hpp"
+#include <iostream>
+#include <fstream> 
 
 namespace dbw_ford_can {
 BelivVehInterface::BelivVehInterface()
@@ -41,7 +43,7 @@ BelivVehInterface::BelivVehInterface()
   /* set up parameters */
   base_frame_id_ = declare_parameter("base_frame_id", "base_link");   //Frame ID
   command_timeout_ms_ = declare_parameter("command_timeout_ms", 1000);
-  loop_rate_ = declare_parameter("loop_rate", 30.0);
+  loop_rate_ = declare_parameter("loop_rate", 50.0);
   wheel_base_ = 2.98;
   steering_ratio_ = 14.6;
 
@@ -147,6 +149,7 @@ void BelivVehInterface::callbackInterface(
   const dbw_ford_msgs::msg::Misc1Report::ConstSharedPtr misc1_rpt,
   const dataspeed_ulc_msgs::msg::UlcReport::ConstSharedPtr ulc_rpt)
 {
+
   std_msgs::msg::Header header;
   header.frame_id = base_frame_id_;
   header.stamp = get_clock()->now();
@@ -160,13 +163,25 @@ void BelivVehInterface::callbackInterface(
   const double current_velocity = sub_steering_ptr_->speed;
   const double current_steer_wheel = sub_steering_ptr_->steering_wheel_angle;  // current vehicle steering wheel angle [rad]
   const double current_steer = current_steer_wheel / steering_ratio_;
-
+  // 打开一个文件流，将数据写入到文件中
+std::ofstream outputFile("data.txt");  
   /* publish steering wheel status */
   {
     SteeringWheelStatusStamped steering_wheel_status_msg;
     steering_wheel_status_msg.stamp = header.stamp;
+    std::cout << "current_steer_wheel: " << current_steer_wheel << "rad" << std::endl;
+
     steering_wheel_status_msg.data = current_steer_wheel;
-    pub_steering_wheel_status_->publish(steering_wheel_status_msg);    
+if (outputFile.is_open()) {
+    outputFile << "Current Velocity: " << current_velocity << " m/s" << std::endl;
+    // 可以继续写入其他数据
+    
+    outputFile.close();  // 关闭文件流
+} else {
+    std::cout << "Unable to open file for writing." << std::endl;
+}
+    pub_steering_wheel_status_->publish(steering_wheel_status_msg); 
+  
   }
 
   /* publish current steering status */
@@ -183,6 +198,11 @@ void BelivVehInterface::callbackInterface(
     twist.header = header;
     twist.longitudinal_velocity = current_velocity;                                 // [m/s]
     twist.heading_rate = current_velocity * std::tan(current_steer) / wheel_base_;  // [rad/s] yaw rate
+     RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "longitudinal_velocity = %f, heading_rate = %f", twist.longitudinal_velocity,
+      twist.heading_rate
+    );
     pub_vehicle_twist_->publish(twist);
   }
 
@@ -252,13 +272,15 @@ int32_t BelivVehInterface::toAutowareShiftReport(
 
 
 void BelivVehInterface::callbackControlCmd(
-  const autoware_auto_control_msgs::msg::AckermannControlCommand::ConstSharedPtr msg)
+  const autoware_auto_control_msgs::msg::AckermannControlCommand& msg)
 {
-  const double current_speed = sub_steering_ptr_->speed;
+  //const double current_speed = sub_steering_ptr_->speed;
   control_command_received_time_ = this->now();
     // Populate command fields
-  ulc_cmd_.linear_velocity = msg->longitudinal.speed;
-  ulc_cmd_.yaw_command = current_speed* tan(msg->lateral.steering_tire_angle)/wheel_base_;
+  ulc_cmd_.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
+  ulc_cmd_.linear_velocity = sub_steering_ptr_->speed;
+
+  ulc_cmd_.yaw_command = sub_steering_ptr_->speed* tan(msg.lateral.steering_tire_angle)/wheel_base_;
   ulc_cmd_.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
 
   // Set other fields to default values
@@ -348,14 +370,22 @@ int32_t BelivVehInterface::toAutowareHazardLightsReport(
 
 void BelivVehInterface::publishCommands(){ 
   /* guard */
-  if (!control_cmd_ptr_ || !sub_steering_ptr_){
+/*   if (!control_cmd_ptr_ || !sub_steering_ptr_){
     RCLCPP_INFO_THROTTLE(
       get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
       "vehicle_cmd = %d, steering_rpt = %d", control_cmd_ptr_ !=nullptr,
       sub_steering_ptr_ !=nullptr
     );
   }
-
+ */
+        /* guard */
+  if (sub_steering_ptr_ || sub_gear_ptr_ || sub_misc1_ptr_ || sub_ulc_rpt_ptr_){
+    RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), std::chrono::milliseconds(1000).count(),
+      "sub_steering_ptr = %d, sub_gear_ptr= %d, sub_misc1_ptr=%d, sub_ulc_rpt_ptr=%d", 
+      sub_steering_ptr_ !=nullptr, sub_gear_ptr_!=nullptr, sub_misc1_ptr_!=nullptr, sub_ulc_rpt_ptr_!=nullptr
+    );
+  }
   pub_ulc_cmd_->publish(ulc_cmd_);
 
 }
