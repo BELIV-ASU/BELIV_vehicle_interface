@@ -15,7 +15,7 @@
 
 #include "beliv_veh_interface.hpp"
 #include <rclcpp/rclcpp.hpp>
-#include <boost/core/no_exceptions_support.hpp>
+
 #include <memory>
 
 int main(int argc, char ** argv)

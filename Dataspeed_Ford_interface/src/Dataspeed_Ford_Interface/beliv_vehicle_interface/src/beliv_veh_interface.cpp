@@ -276,11 +276,13 @@ void BelivVehInterface::callbackControlCmd(
 {
   //const double current_speed = sub_steering_ptr_->speed;
   control_command_received_time_ = this->now();
+  ulc_cmd_.header.frame_id = base_frame_id_;
+  ulc_cmd_.header.stamp = get_clock()->now();
     // Populate command fields
   ulc_cmd_.pedals_mode = dataspeed_ulc_msgs::msg::UlcCmd::SPEED_MODE;
-  ulc_cmd_.linear_velocity = sub_steering_ptr_->speed;
+  ulc_cmd_.linear_velocity = msg.longitudinal.speed;
 
-  ulc_cmd_.yaw_command = sub_steering_ptr_->speed* tan(msg.lateral.steering_tire_angle)/wheel_base_;
+  ulc_cmd_.yaw_command = msg.longitudinal.speed* tan(msg.lateral.steering_tire_angle)/wheel_base_;
   ulc_cmd_.steering_mode = dataspeed_ulc_msgs::msg::UlcCmd::YAW_RATE_MODE;
 
   // Set other fields to default values
@@ -293,6 +295,9 @@ void BelivVehInterface::callbackControlCmd(
   ulc_cmd_.linear_decel = 0;
   ulc_cmd_.angular_accel = 0;
   ulc_cmd_.lateral_accel = 0;
+  ulc_cmd_.jerk_limit_throttle=0;
+  ulc_cmd_.jerk_limit_brake=0;
+  printf("ulc_cmd.linear_vel=%f", ulc_cmd_.linear_velocity);
 }
 
 void BelivVehInterface::callbackBrakeRpt(
