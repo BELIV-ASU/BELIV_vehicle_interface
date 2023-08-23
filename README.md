@@ -13,35 +13,32 @@ Vehicle Interface for Dataspeed FORD Mach_E
 ### Overall Structure
 ![image](https://github.com/BELIV-ASU/Dataspeed_ULCnode/assets/123104450/73878cb2-976a-4372-9162-225c3325fa80)
 
+## TO Sync your local Repo
 
-
-### Dependencies
-
-* git version 2.34.1
-* Autoware.Universe
-* Ubuntu 22.04
-* Ros Humble
-* Dataspeed NavRoute Path Follwoing Sofeware 1.1.1
-* ULC TBD
-
-
-### Executing program
-
-* Download this folder into your local computer and you can adding or eddting this folder
-* Add the file you created or modifed to the local folder
-* Plase pay attention to the version of the modifed file
-* Update the folder using git version control
-* Well Done
+Generate a Personal Access Token (PAT) on GitHub:
+* Go to your GitHub account settings.
+* Select "Developer settings" > "Personal access tokens."
+* Click "Generate new token" and give it appropriate permissions (repo, read/write access, etc.).
+* Copy the generated token.
+Clone the Repository Using the Classic PAT:
+* In your terminal, use the following command to clone the repository, replacing your-token with your actual classic personal access token:
 ```
-code blocks for commands
+git clone https://username:your-token@github.com/BELIV-ASU/Dataspeed_ULCnode.git
 ```
+*** Replace "username" with your Github username
 
-## Help
-
-Any advise for common problems or issues.
+*** Reoakce "your_token" with your personal access token you generated
+Navigate to the rood directory:
 ```
-command to run if program contains helper info
+cd repository/specific-folder
 ```
+then follow the command below:
+```
+git add .
+git commit -m "Sync specific folder"
+git push origin master
+```
+*** Replace "master" with the specfic brunch you want to modify
 
 ## Authors
 
