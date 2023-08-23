@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(beliv_vehicle_description)
+project(beliv_sim_description)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
