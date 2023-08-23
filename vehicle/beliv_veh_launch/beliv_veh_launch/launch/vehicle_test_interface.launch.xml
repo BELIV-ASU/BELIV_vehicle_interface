@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="vehicle_id" default="$(env VEHICLE_ID default)"/>
+  
+  
+  <!-- Node to control enabling/disabling the autonomy system -->
+  <node pkg="asu" exec="sys_enable_node.py" name="sys_enable_node" output="screen">
+        <param name="use_sim_time" value="false" />
+  </node>
+
+  <!-- Start up device drivers and load URDF extrinsics calibration -->
+  <include file="$(find-pkg-share beliv_vehicle_interface)/launch/devices.launch.xml">
+ 	<arg name="playback" default="false" />
+  </include>
+  
+  <!--Beliv Vehcile Interface-->
+  <node pkg="beliv_vehicle_interface" exec="beliv_veh_interface" output="screen">
+  </node>
+  
+</launch>
