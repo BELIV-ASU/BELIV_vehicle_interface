@@ -5,15 +5,10 @@
    <!-- Launch simulator and load vehicle model -->
   <include file="$(find-pkg-share dataspeed_dbw_gazebo)/launch/dataspeed_dbw_gazebo.launch.xml" >
     <arg name="use_camera_control" value="true" />
-    <arg name="world_name" value="$(find-pkg-share ds_autonomy_sim_demo)/worlds/mcity.world" />
+    <arg name="world_name" value="$(find-pkg-share ds_autonomy_sim_demo)/worlds/empty.world" />
     <arg name="sim_param_file" value="$(find-pkg-share ds_autonomy_sim_demo)/config/sim_params.yaml" />
     <arg name="headless" value="False" />
   </include>
- 
-  <!-- Node that publishes system enable and DBW enable signals -->
-  <node pkg="ds_autonomy_sim_demo" exec="sys_enable.py" output="screen" >
-    <param name="use_sim_time" value="True" />
-  </node>
 
   <!-- Vehicle Interface Parm--> 
   <arg name="vehicle_name" default="vehicle" />
@@ -28,6 +23,17 @@
   
   <!--Beliv Vehcile Interface-->
   <node pkg="beliv_vehicle_interface" exec="beliv_veh_interface" output="screen" >
+  	<remap from="/vehicle/status/control_mode" to="/beliv/status/control_mode"/>
+  	<remap from="/vehicle/status/velocity_status" to="/beliv/status/velocity_status"/>
+  	<remap from="/vehicle/status/steering_status" to="/beliv/status/gear_status"/>
+  	<remap from="/vehicle/status/turn_indicators_status" to="/beliv/status/turn_indicators_status"/>
+  	<remap from="/vehicle/status/hazard_lights_status" to="/beliv/status/hazard_lights_status"/>
+  	<remap from="/vehicle/status/steering_wheel_status" to="/beliv/status/steering_wheel_status"/>
+  	<remap from="/vehicle/status/door_status" to="/beliv/status/door_status"/>
   </node>
   
+    <!-- Node that publishes system enable and DBW enable signals -->
+  <node pkg="ds_autonomy_sim_demo" exec="sys_enable.py" output="screen" >
+    <param name="use_sim_time" value="True" />
+  </node>
 </launch>
