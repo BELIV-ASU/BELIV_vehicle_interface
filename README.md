@@ -1,6 +1,6 @@
 ![image](https://github.com/BELIV-ASU/Dataspeed_ULCnode/assets/123104450/7e3014ab-a083-433e-be22-6e1f3d1b9a2b)
 
-# Dataspeed_ULCnode
+# Beliv_Vehicle_Interface
 
 Vehicle Interface for Dataspeed FORD Mach_E
 
