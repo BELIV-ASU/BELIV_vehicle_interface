@@ -1,2 +1,2 @@
-![Launch Structure](vehicle/BELIV_vehicle_interface.drawio.png)
+!(vehicle/BELIV_vehicle_interface.drawio.png)
 
