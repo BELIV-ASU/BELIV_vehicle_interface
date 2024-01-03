@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <arg name="playback" default="false" />
+
+    <!-- URDF model 
+    <include file="$(find-pkg-share asu)/launch/robot_state_publisher.launch.py">
+        <arg name="use_sim_time" value="false" />
+        <arg name="urdf_path" value="$(find-pkg-share asu)/urdf/mache.urdf" />
+    </include> -->
+
+    <!-- USB/CAN Interface -->
+    <node unless="false" pkg="dataspeed_can_usb" exec="can_node" output="screen">
+        <remap from="can_bus_1/can_rx" to="/radar/can_rx"/>
+        <remap from="can_bus_1/can_tx" to="/radar/can_tx"/>
+        <remap from="can_bus_1/can_err" to="/radar/can_err"/>
+        <param name="bitrate_1" value="500000" />
+        <remap from="can_bus_3/can_rx" to="/can_bus_dbw/can_rx"/>
+        <remap from="can_bus_3/can_tx" to="/can_bus_dbw/can_tx"/>
+        <remap from="can_bus_3/can_err" to="/can_bus_dbw/can_err"/>
+        <param name="bitrate_3" value="500000" />
+        <!-- SID 0x060 to 0x07F -->
+        <param name="channel_3_mask_0"  value="0x800007E0" />
+        <param name="channel_3_match_0" value="0x00000060" />
+    </node>
+
+    <!-- DBW Interface -->
+    <arg name="ackermann_wheelbase" default="2.98"/>
+    <arg name="ackermann_track"     default="1.73"/>
+    <arg name="steering_ratio"      default="14.6"/>
+    <group>
+        <push-ros-namespace namespace="vehicle" />
+        <node pkg="dbw_ford_can" exec="dbw_node" output="screen">
+            <remap from="can_rx" to="/can_bus_dbw/can_rx"/>
+            <remap from="can_tx" to="/can_bus_dbw/can_tx"/>
+            <param name="frame_id" value="base_link" />
+            <param name="warn_cmds" value="true" />
+            <param name="pedal_luts" value="false" />
+            <param name="buttons" value="true" />
+            <param name="ackermann_wheelbase" value="$(var ackermann_wheelbase)" />
+            <param name="ackermann_track" value="$(var ackermann_track)" />
+            <param name="steering_ratio" value="$(var steering_ratio)" />
+            <param name="joint_states" value="false" />
+        </node>
+        <node pkg="dataspeed_dbw_gateway" exec="ford_gateway" output="screen">
+        </node>
+        <node pkg="dataspeed_ulc_can" exec="ulc_node" output="screen">
+            <remap from="can_rx" to="/can_bus_dbw/can_rx"/>
+            <remap from="can_tx" to="/can_bus_dbw/can_tx"/>
+        </node>
+    </group>
+
+</launch>

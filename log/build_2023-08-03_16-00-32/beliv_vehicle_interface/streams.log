@@ -1,0 +1,80 @@
+[0.022s] Invoking command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --build /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface -- -j20 -l20
+[0.222s] [ 33%] [32mBuilding CXX object CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface.cpp.o[0m
+[0.223s] [ 66%] [32mBuilding CXX object CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface_node.cpp.o[0m
+[3.762s] In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+[3.762s]                  from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[3.762s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface_node.cpp:16[m[K:
+[3.762s] [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+[3.762s]    17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+[3.762s]       | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+[3.763s] In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+[3.763s]                  from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[3.763s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:35[m[K:
+[3.763s] [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+[3.763s]    17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+[3.763s]       | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+[22.150s] [100%] [32m[1mLinking CXX executable beliv_veh_interface[0m
+[24.319s] [100%] Built target beliv_veh_interface
+[24.334s] Invoked command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --build /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface -- -j20 -l20
+[24.416s] Invoking command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --install /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface
+[24.430s] -- Install configuration: ""
+[24.430s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/include
+[24.430s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/include/beliv_vehicle_interface
+[24.431s] -- Installing: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/lib/beliv_vehicle_interface/beliv_veh_interface
+[24.440s] -- Set runtime path of "/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/lib/beliv_vehicle_interface/beliv_veh_interface" to ""
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/launch
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/launch/dbw.launch.xml
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/ament_index/resource_index/package_run_dependencies/beliv_vehicle_interface
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/ament_index/resource_index/parent_prefix_path/beliv_vehicle_interface
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/environment/ament_prefix_path.sh
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/environment/ament_prefix_path.dsv
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/environment/path.sh
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/environment/path.dsv
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/local_setup.bash
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/local_setup.sh
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/local_setup.zsh
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/local_setup.dsv
+[24.440s] -- Installing: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/package.dsv
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/ament_index/resource_index/packages/beliv_vehicle_interface
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/cmake/ament_cmake_export_dependencies-extras.cmake
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/cmake/ament_cmake_export_include_directories-extras.cmake
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/cmake/beliv_vehicle_interfaceConfig.cmake
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/cmake/beliv_vehicle_interfaceConfig-version.cmake
+[24.440s] -- Up-to-date: /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/install/beliv_vehicle_interface/share/beliv_vehicle_interface/package.xml
+[24.441s] Invoked command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --install /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface

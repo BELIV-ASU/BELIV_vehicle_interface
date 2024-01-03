@@ -1,0 +1,10 @@
+[01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:[m[K In member function ‘[01m[Kvoid dbw_ford_can::BelivVehInterface::publishCommands()[m[K’:
+[01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:375:38:[m[K [01;35m[Kwarning: [m[Kformat ‘[01m[K%d[m[K’ expects argument of type ‘[01m[Kint[m[K’, but argument 2 has type ‘[01m[Kdataspeed_ulc_msgs::msg::UlcCmd_<std::allocator<void> >::_linear_velocity_type[m[K’ {aka ‘[01m[Kdouble[m[K’} [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wformat=-Wformat=]8;;[m[K]
+  375 |     printf("ulc_cmd.linear_velocity=[01;35m[K%d[m[K", [32m[Kulc_cmd.linear_velocity[m[K);
+      |                                     [01;35m[K~^[m[K   [32m[K~~~~~~~~~~~~~~~~~~~~~~~[m[K
+      |                                      [01;35m[K|[m[K           [32m[K|[m[K
+      |                                      [01;35m[Kint[m[K         [32m[Kdataspeed_ulc_msgs::msg::UlcCmd_<std::allocator<void> >::_linear_velocity_type {aka double}[m[K
+      |                                     [32m[K%f[m[K
+gmake[2]: *** [CMakeFiles/beliv_veh_interface.dir/build.make:76: CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface.cpp.o] Interrupt
+gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/beliv_veh_interface.dir/all] Interrupt
+gmake: *** [Makefile:146: all] Interrupt

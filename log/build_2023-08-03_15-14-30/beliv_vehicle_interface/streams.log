@@ -1,0 +1,91 @@
+[0.020s] Invoking command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --build /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface -- -j20 -l20
+[0.126s] [ 33%] [32mBuilding CXX object CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface.cpp.o[0m
+[0.127s] [ 66%] [32mBuilding CXX object CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface_node.cpp.o[0m
+[0.525s] In file included from [01m[K/usr/include/boost/math/constants/constants.hpp:11[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/util/math.hpp:29[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/util/is_inverse_spheroidal_coordinates.hpp:19[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/assign_values.hpp:42[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/assign_box_corners.hpp:21[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/algorithms/convert.hpp:38[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/geometries/box.hpp:22[m[K,
+[0.525s]                  from [01m[K/usr/include/boost/geometry/geometries/geometries.hpp:25[m[K,
+[0.525s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_geometry.hpp:19[m[K,
+[0.525s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface_node.cpp:16[m[K:
+[0.526s] [01m[K/usr/include/boost/math/tools/cxx03_warn.hpp:9:10:[m[K [01;31m[Kerror: [m[K#include expects "FILENAME" or <FILENAME>
+[0.526s]     9 | #include [01;31m[K#[m[Kinclude <boost/core/no_exceptions_support.hpp>
+[0.526s]       |          [01;31m[K^[m[K
+[0.526s] In file included from [01m[K/usr/include/boost/math/constants/constants.hpp:11[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/util/math.hpp:29[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/util/is_inverse_spheroidal_coordinates.hpp:19[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/assign_values.hpp:42[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/assign_box_corners.hpp:21[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/algorithms/convert.hpp:38[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/geometries/box.hpp:22[m[K,
+[0.526s]                  from [01m[K/usr/include/boost/geometry/geometries/geometries.hpp:25[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_geometry.hpp:19[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[0.526s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:35[m[K:
+[0.526s] [01m[K/usr/include/boost/math/tools/cxx03_warn.hpp:9:10:[m[K [01;31m[Kerror: [m[K#include expects "FILENAME" or <FILENAME>
+[0.526s]     9 | #include [01;31m[K#[m[Kinclude <boost/core/no_exceptions_support.hpp>
+[0.526s]       |          [01;31m[K^[m[K
+[3.399s] In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+[3.399s]                  from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[3.399s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface_node.cpp:16[m[K:
+[3.399s] [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+[3.399s]    17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+[3.399s]       | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+[3.409s] In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+[3.409s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+[3.410s]                  from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+[3.410s]                  from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:35[m[K:
+[3.410s] [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+[3.410s]    17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+[3.410s]       | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+[8.460s] gmake[2]: *** [CMakeFiles/beliv_veh_interface.dir/build.make:90: CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface_node.cpp.o] Error 1
+[8.460s] gmake[2]: *** Waiting for unfinished jobs....
+[12.567s] gmake[2]: *** [CMakeFiles/beliv_veh_interface.dir/build.make:76: CMakeFiles/beliv_veh_interface.dir/src/beliv_veh_interface.cpp.o] Error 1
+[12.567s] gmake[1]: *** [CMakeFiles/Makefile2:137: CMakeFiles/beliv_veh_interface.dir/all] Error 2
+[12.567s] gmake: *** [Makefile:146: all] Error 2
+[12.570s] Invoked command in '/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/hguo/carla-autoware-universe/autoware/install/simulator_compatibility_test:/home/hguo/carla-autoware-universe/autoware/install/ad_api_visualizers:/opt/ros/humble /usr/bin/cmake --build /home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/build/beliv_vehicle_interface -- -j20 -l20

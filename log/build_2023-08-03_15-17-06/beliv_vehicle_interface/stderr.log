@@ -1,0 +1,48 @@
+In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+                 from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+                 from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+                 from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface_node.cpp:16[m[K:
+[01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+   17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+      | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
+In file included from [01m[K/usr/include/boost/config/header_deprecated.hpp:18[m[K,
+                 from [01m[K/usr/include/boost/detail/no_exceptions_support.hpp:15[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/varray_detail.hpp:45[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/varray.hpp:41[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/detail/rtree/node/node.hpp:19[m[K,
+                 from [01m[K/usr/include/boost/geometry/index/rtree.hpp:61[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/within/multi_point.hpp:33[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/within/implementation.hpp:42[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/covered_by/implementation.hpp:25[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/covered_by.hpp:24[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffered_piece_collection.hpp:28[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/detail/buffer/buffer_inserter.hpp:35[m[K,
+                 from [01m[K/usr/include/boost/geometry/algorithms/buffer.hpp:41[m[K,
+                 from [01m[K/usr/include/boost/geometry/geometry.hpp:63[m[K,
+                 from [01m[K/usr/include/boost/geometry.hpp:17[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/geometry/boost_polygon_utils.hpp:25[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/tier4_autoware_utils/include/tier4_autoware_utils/tier4_autoware_utils.hpp:19[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info.hpp:18[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/install/vehicle_info_util/include/vehicle_info_util/vehicle_info_util.hpp:18[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.hpp:39[m[K,
+                 from [01m[K/home/hguo/carla-autoware-universe/autoware/src/vehicle/external/beliv_vehicle_interface/src/beliv_veh_interface.cpp:35[m[K:
+[01m[K/usr/include/boost/detail/no_exceptions_support.hpp:17:1:[m[K [01;36m[Knote: [m[K‘[01m[K#pragma message: This header is deprecated. Use <boost/core/no_exceptions_support.hpp> instead.[m[K’
+   17 | [01;36m[KBOOST_HEADER_DEPRECATED[m[K("<boost/core/no_exceptions_support.hpp>")
+      | [01;36m[K^~~~~~~~~~~~~~~~~~~~~~~[m[K
