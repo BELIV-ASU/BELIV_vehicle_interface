@@ -4,6 +4,15 @@
 
 Vehicle Interface for Dataspeed FORD Mach_E
 
+## Paper
+```
+@techreport{guo2024developing,
+  title={Developing an Automated Vehicle Research Platform by Integrating Autoware with the DataSpeed Drive-By-Wire System},
+  author={Guo, Hengcong and Li, Jiangtao and Saravanan, Nithish Kumar and Wishart, Jeffrey and Zhao, Junfeng},
+  year={2024},
+  institution={SAE Technical Paper}
+}
+```
 ## Getting Started
 
 * Plase read through the Autoware documentation first before you do any modifcation to the folder. [Click here](https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/overview/#3-create-a-vehicle_interface-package)
