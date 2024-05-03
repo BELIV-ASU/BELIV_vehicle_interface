@@ -4,7 +4,8 @@
 
 Vehicle Interface for Dataspeed FORD Mach_E
 
-## Paper
+## Citation
+Guo, Hengcong, et al. Developing an Automated Vehicle Research Platform by Integrating Autoware with the DataSpeed Drive-By-Wire System. No. 2024-01-1981. SAE Technical Paper, 2024.
 ```
 @techreport{guo2024developing,
   title={Developing an Automated Vehicle Research Platform by Integrating Autoware with the DataSpeed Drive-By-Wire System},
